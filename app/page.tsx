@@ -41,7 +41,7 @@ function AttentionBanner({
   return (
     <div
       className={[
-        "mb-4 flex max-w-3xl items-center justify-between rounded-lg px-3.5 py-2.5",
+        "mb-3 flex w-full items-center justify-between rounded-lg px-3.5 py-2.5",
         BANNER_STYLES[variant],
       ].join(" ")}
       role="status"
@@ -119,7 +119,7 @@ function SurfaceList() {
 
 function CompaniesSection() {
   const router = useRouter();
-  const AVATAR_TONES = ["bg-neutral-50/60", "bg-neutral-100/85", "bg-neutral-100/70"];
+  const AVATAR_TONES = ["bg-neutral-50/60", "bg-neutral-50/55", "bg-neutral-50/50"];
 
   const initialsFor = (name: string) =>
     name
@@ -203,7 +203,7 @@ export default function HomePage() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   return (
-    <div className="w-full pb-20">
+    <div className="w-full pb-12">
       {!bannerDismissed ? (
         <AttentionBanner variant="attention" onDismiss={() => setBannerDismissed(true)} />
       ) : null}

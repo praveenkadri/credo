@@ -290,7 +290,7 @@ export function HeroGraph({
             x2={activePoint.x}
             y1={topPad + 8}
             y2={height - bottomPad}
-            stroke="rgba(31,34,28,0.4)"
+            stroke="rgba(212,212,212,0.5)"
             strokeWidth="1"
           />
 
@@ -298,7 +298,7 @@ export function HeroGraph({
         </svg>
 
         <div
-          className="pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_1px_2px_rgba(31,34,28,0.03),0_6px_14px_rgba(31,34,28,0.04)]"
+          className="pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
           style={{ left: tooltipLeft, top: tooltipTop }}
         >
           <p className="font-medium text-[#1f221c]">{hoverDisplayValue}</p>
