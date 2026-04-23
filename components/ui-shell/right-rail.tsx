@@ -1,57 +1,23 @@
-import { EmptyState } from "@/components/ui-patterns/empty-state";
-import { ListRow } from "@/components/ui-patterns/list-row";
-import { SurfacePanel } from "@/components/ui-patterns/surface-panel";
-import {
-  UPCOMING_DEADLINES,
-} from "@/lib/overview-decision-data";
-
-function RailList({ items, emptyMessage }: { items: string[]; emptyMessage?: string }) {
-  if (items.length === 0) {
-    return <EmptyState message={emptyMessage ?? "No items"} />;
-  }
-
-  return (
-    <div className="space-y-1">
-      {items.map((item) => (
-        <ListRow
-          key={item}
-          as="div"
-          title={item}
-          className="px-2 py-2.5 transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[1px] hover:bg-white/80 hover:text-neutral-900 motion-reduce:hover:translate-y-0"
-        />
-      ))}
-    </div>
-  );
-}
+import { RightRailCard } from "@/components/overview/right-rail-card";
+import { RightRailSection } from "@/components/overview/right-rail-section";
+import { rightRail } from "@/components/overview/overview-data";
 
 export default function RightRail() {
-  const todayItems = UPCOMING_DEADLINES.filter((item) => item.dueLabel.startsWith("Today")).map(
-    (item) => `${item.title} (${item.dueLabel.replace("Today, ", "")})`
-  );
-  const nextItems = UPCOMING_DEADLINES.filter((item) => !item.dueLabel.startsWith("Today")).map(
-    (item) => `${item.title} (${item.dueLabel})`
-  );
-
   return (
     <aside className="hidden xl:flex xl:w-[clamp(340px,24vw,414px)] xl:shrink-0 xl:flex-col">
       <div className="sticky top-3 flex flex-col gap-4 px-2 pb-4 pt-0">
-        <SurfacePanel
-          title="Today"
-          eyebrow="Operational focus"
-          className="shell-enter relative overflow-hidden rounded-[28px] bg-white/45 backdrop-blur-md ring-1 ring-white/40 shadow-[0_8px_30px_rgba(15,23,42,0.04)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.20),rgba(255,255,255,0.02))] [&>*]:relative [&>*]:z-[1] [&_h2]:text-[12px] [&_h2]:text-neutral-500"
-          tone="soft"
-        >
-          <RailList items={todayItems} emptyMessage="No items due today" />
-        </SurfacePanel>
+        <RightRailCard title="Today" eyebrow="Operational focus" tone="soft" className="shell-enter">
+          <RightRailSection items={rightRail.todayItems} emptyMessage="No items due today" />
+        </RightRailCard>
 
-        <SurfacePanel
+        <RightRailCard
           title="Next"
           eyebrow="Upcoming"
-          className="shell-enter shell-enter-delay-1 relative overflow-hidden rounded-[28px] bg-white/45 backdrop-blur-md ring-1 ring-white/40 shadow-[0_8px_30px_rgba(15,23,42,0.04)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.20),rgba(255,255,255,0.02))] [&>*]:relative [&>*]:z-[1] [&_h2]:text-[12px] [&_h2]:text-neutral-500"
+          className="shell-enter shell-enter-delay-1"
           tone="inset"
         >
-          <RailList items={nextItems} emptyMessage="No upcoming deadlines" />
-        </SurfacePanel>
+          <RightRailSection items={rightRail.nextItems} emptyMessage="No upcoming deadlines" />
+        </RightRailCard>
       </div>
     </aside>
   );

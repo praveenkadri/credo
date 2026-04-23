@@ -4,7 +4,8 @@ import { useState } from "react";
 import Sidebar from "@/components/ui-shell/sidebar";
 import Topbar from "@/components/ui-shell/topbar";
 import RightRail from "@/components/ui-shell/right-rail";
-import { SIDEBAR_COOKIE_KEY } from "@/components/ui-shell/layout-constants";
+import { APP_LAYOUT, SIDEBAR_COOKIE_KEY } from "@/components/ui-shell/layout-constants";
+import { PageFrame, PageMain, PageRail } from "@/components/ui-shell/page-layout";
 
 export function AppShell({
   children,
@@ -28,17 +29,19 @@ export function AppShell({
 
         <div className="min-w-0 flex flex-1 flex-col">
           <div className="sticky top-0 z-30 bg-[var(--bg-canvas)]/95 backdrop-blur-sm">
-            <div className="w-full px-4 md:px-5">
+            <div className={["w-full", APP_LAYOUT.contentPaddingX].join(" ")}>
               <Topbar />
             </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="w-full px-4 pb-8 md:px-5 md:pb-10">
-              <div className="mt-1.5 grid w-full items-start gap-6 xl:grid-cols-[minmax(0,1fr)_clamp(340px,24vw,414px)]">
-                <main className="min-w-0 px-0 md:px-0">{children}</main>
-                <RightRail />
-              </div>
+            <div className={["w-full", APP_LAYOUT.contentPaddingX, APP_LAYOUT.contentPaddingBottom].join(" ")}>
+              <PageFrame>
+                <PageMain>{children}</PageMain>
+                <PageRail>
+                  <RightRail />
+                </PageRail>
+              </PageFrame>
             </div>
           </div>
         </div>

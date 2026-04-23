@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { ChartRangeSelector } from "@/components/overview/chart-range-selector";
+import { motionClass } from "@/components/ui/motion";
+import { surfaceClass } from "@/components/ui/surface";
+import { layoutTokens } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type HeroGraphPoint = {
@@ -165,7 +169,7 @@ export function HeroGraph({
     return () => ro.disconnect();
   }, []);
 
-  const height = 248;
+  const height = layoutTokens.chartHeight;
   const topPad = 24;
   const rightPad = 10;
   const bottomPad = 28;
@@ -216,7 +220,8 @@ export function HeroGraph({
   return (
     <section
       className={cn(
-        "rounded-2xl bg-neutral-50/40 px-5 py-4",
+        surfaceClass("chartSurface"),
+        "px-5 py-4",
         className
       )}
     >
@@ -253,7 +258,7 @@ export function HeroGraph({
         <svg
           viewBox={`0 0 ${plotWidth} ${height}`}
           className={cn(
-            "block h-[248px] w-full overflow-visible transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+            `block h-[248px] w-full overflow-visible ${motionClass.softFadeTransform}`,
             isRangeTransitioning ? "translate-y-[2px] opacity-65" : "translate-y-0 opacity-100"
           )}
         >
@@ -319,7 +324,7 @@ export function HeroGraph({
 
         <div
           className={cn(
-            "pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition-[opacity,transform] duration-[120ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+            `pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)] ${motionClass.softFadeFast}`,
             isHovering ? "translate-y-0 opacity-100" : "translate-y-[3px] opacity-0"
           )}
           style={{ left: tooltipLeft, top: tooltipTop }}
@@ -330,30 +335,15 @@ export function HeroGraph({
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {ranges.map((rangeOption) => {
-            const active = rangeOption === selectedRange;
-            return (
-              <button
-                key={rangeOption}
-                type="button"
-                onClick={() => {
-                  setSelectedRange(rangeOption);
-                  const nextLength = getDataForRange(points, rangeOption).length;
-                  setHoverIndex(Math.floor(nextLength * 0.72));
-                }}
-                className={cn(
-                  "inline-flex h-8 items-center rounded-xl px-3 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
-                  active
-                    ? "bg-neutral-100 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(31,34,28,0.05)]"
-                    : "text-[#6e736b] hover:bg-neutral-100/70 hover:text-neutral-900"
-                )}
-              >
-                {rangeOption}
-              </button>
-            );
-          })}
-        </div>
+        <ChartRangeSelector
+          ranges={ranges}
+          selectedRange={selectedRange}
+          onSelect={(rangeOption) => {
+            setSelectedRange(rangeOption);
+            const nextLength = getDataForRange(points, rangeOption).length;
+            setHoverIndex(Math.floor(nextLength * 0.72));
+          }}
+        />
 
         <div className="inline-flex items-center rounded-xl bg-[#f3f4ef] p-1">
           <button
