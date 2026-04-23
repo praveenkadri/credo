@@ -6,95 +6,62 @@ import { HeroGraph } from "@/components/ui-patterns/hero-graph";
 import { ListRow } from "@/components/ui-patterns/list-row";
 import { StatBlock } from "@/components/ui-patterns/stat-block";
 import { SurfacePanel } from "@/components/ui-patterns/surface-panel";
+import {
+  COMPANIES,
+  OPERATIONAL_EVENTS,
+  getChartInterpretation,
+  getOperatingSummary,
+} from "@/lib/overview-decision-data";
 
-const COMPANIES = [
-  {
-    id: "aster-health-group",
-    name: "Aster Health Group",
-    lastActivity: "Payroll run prepared 2h ago",
-    payrollAmount: "$128,430.00",
-    employeeCount: 94,
-  },
-  {
-    id: "northline-services",
-    name: "Northline Services",
-    lastActivity: "Draft approved yesterday",
-    payrollAmount: "$84,920.00",
-    employeeCount: 61,
-  },
-  {
-    id: "summit-industrial",
-    name: "Summit Industrial",
-    lastActivity: "Timesheets locked today",
-    payrollAmount: "$214,580.00",
-    employeeCount: 143,
-  },
-  {
-    id: "willow-hospitality",
-    name: "Willow Hospitality",
-    lastActivity: "Funding reminder sent 1d ago",
-    payrollAmount: "$71,240.00",
-    employeeCount: 48,
-  },
-  {
-    id: "harbor-retail-partners",
-    name: "Harbor Retail Partners",
-    lastActivity: "New hire synced 3d ago",
-    payrollAmount: "$167,390.00",
-    employeeCount: 119,
-  },
-];
-
-const ACTIVITY_ROWS = [
-  "Payroll run created for Aster Health Group",
-  "Invoice batch approved for Northline Services",
-  "Document package exported for Summit Industrial",
-  "Quarterly report generated for Willow Hospitality",
-  "Funding reminder sent for Harbor Retail Partners",
-];
+const STATE_TONE: Record<string, string> = {
+  Healthy: "text-[#5f685d]",
+  "Needs review": "text-[#4f5f4f]",
+  "Funding due": "text-[#5b6651]",
+  "Invoice backlog": "text-[#5f6557]",
+  "Filing soon": "text-[#5d6456]",
+};
 
 function OperationalPulse() {
   return (
     <SurfacePanel
       title="Operational pulse"
-      eyebrow="Summary"
+      eyebrow="Interpreted signals"
       tone="soft"
       compact
-      className="mt-5 shell-enter shell-enter-delay-2"
+      className="mt-6 shell-enter shell-enter-delay-3"
     >
       <div className="grid gap-4 md:grid-cols-3">
         <StatBlock
           quiet
-          label="Payroll runs in progress"
-          value="3"
-          helper="Runs currently progressing through review."
+          label="Payroll flow"
+          value="3 runs progressing normally"
+          helper="No intervention needed."
         />
         <StatBlock
           quiet
-          label="Invoices pending send"
-          value="18"
-          helper="Invoices queued for release in this cycle."
+          label="Invoice pressure"
+          value="Backlog forming in 1 company"
+          helper="12 invoices older than five days."
         />
         <StatBlock
           quiet
-          label="Documents generated this week"
-          value="9"
-          helper="Document output remains above the previous week."
-          badgeText="+12%"
+          label="Compliance readiness"
+          value="2 filings inside seven-day window"
+          helper="1 packet pending review."
         />
       </div>
     </SurfacePanel>
   );
 }
 
-function SurfaceList({ items }: { items: string[] }) {
+function SurfaceList() {
   return (
     <div className="space-y-1">
-      {items.map((item) => (
+      {OPERATIONAL_EVENTS.map((event) => (
         <ListRow
-          key={item}
+          key={event.id}
           as="div"
-          title={item}
+          title={event.title}
           className="px-2 py-2.5"
           marker={<span className="h-1.5 w-1.5 rounded-full bg-[#93988f]/75" />}
         />
@@ -116,7 +83,7 @@ function CompaniesSection() {
       .join("");
 
   return (
-    <section className="mt-6 shell-enter shell-enter-delay-2">
+    <section className="mt-4 shell-enter shell-enter-delay-2">
       <div className="-mx-3 mb-3 flex items-end justify-between gap-3 px-3">
         <div>
           <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-neutral-400">Companies</p>
@@ -130,7 +97,7 @@ function CompaniesSection() {
         </Link>
       </div>
 
-      <div className="divide-y divide-[#e8ece3]">
+      <div className="space-y-2">
         {COMPANIES.map((company, index) => (
           <div
             key={company.id}
@@ -143,7 +110,7 @@ function CompaniesSection() {
                 router.push(`/companies/${company.id}`);
               }
             }}
-            className="group -mx-3 grid cursor-pointer gap-y-4 rounded-xl px-3 py-6 transition-all duration-200 ease-out hover:translate-x-[1px] hover:bg-neutral-50/60 hover:shadow-[0_1px_0_rgba(0,0,0,0.02)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0"
+            className="group grid cursor-pointer gap-y-4 rounded-xl border border-neutral-200/40 bg-white/60 px-3 py-6 transition-all duration-200 ease-out hover:bg-neutral-50 focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0"
           >
             <div className="flex min-w-0 items-start gap-3.5">
               <span
@@ -160,6 +127,9 @@ function CompaniesSection() {
                 </p>
                 <p className="mt-0.5 truncate text-[12px] leading-[1.3] text-[#6e736b] transition-colors duration-200 group-hover:text-neutral-600">
                   {company.lastActivity}
+                </p>
+                <p className={["mt-1 text-[12px] leading-[1.35]", STATE_TONE[company.state]].join(" ")}>
+                  {company.state} - {company.stateDetail}
                 </p>
               </div>
             </div>
@@ -189,9 +159,7 @@ export default function HomePage() {
           Credo workspace
         </h1>
         <p className="mt-1 max-w-3xl text-[15px] leading-[1.68] text-[#6e736b]">
-          Multi-company payroll and invoicing operations in one calm surface. Move
-          between Companies, Activity, Payroll, Invoices, Documents, Reports, and
-          Settings from the navigation rail.
+          {getOperatingSummary()}
         </p>
       </div>
 
@@ -200,11 +168,12 @@ export default function HomePage() {
           title="Cash movement"
           valueLabel="Portfolio value"
           currentValue="$18,403.77"
-          deltaText="+$191.50 past day →"
+          deltaText="+$191.50 past day"
           deltaPositive
           activeRange="1D"
           mode="Value"
-          className="shell-enter shell-enter-delay-1"
+          interpretation={getChartInterpretation()}
+          className="mt-4 shell-enter shell-enter-delay-2"
         />
 
         <CompaniesSection />
@@ -213,12 +182,12 @@ export default function HomePage() {
 
         <SurfacePanel
           title="Activity"
-          eyebrow="Timeline"
+          eyebrow="Important events"
           compact
           tone="soft"
           className="mt-6 shell-enter shell-enter-delay-4"
         >
-          <SurfaceList items={ACTIVITY_ROWS} />
+          <SurfaceList />
         </SurfacePanel>
       </section>
     </div>

@@ -74,19 +74,13 @@ function ComplianceIcon() {
   );
 }
 
-const NAV_GROUPS: NavItem[][] = [
-  [
-    { label: "Overview", active: true, icon: OverviewIcon },
-    { label: "Team", icon: TeamIcon },
-    { label: "Companies", icon: CompaniesIcon },
-  ],
-  [
-    { label: "Payroll", icon: PayrollIcon },
-    { label: "Insights", icon: InsightsIcon },
-  ],
-  [
-    { label: "Compliance", icon: ComplianceIcon },
-  ],
+const NAV_ITEMS: NavItem[] = [
+  { label: "Overview", active: true, icon: OverviewIcon },
+  { label: "Team", icon: TeamIcon },
+  { label: "Companies", icon: CompaniesIcon },
+  { label: "Payroll", icon: PayrollIcon },
+  { label: "Insights", icon: InsightsIcon },
+  { label: "Compliance", icon: ComplianceIcon },
 ];
 
 function NavRow({
@@ -104,7 +98,7 @@ function NavRow({
       aria-label={collapsed ? item.label : undefined}
       className={[
         "group relative flex cursor-pointer items-center transition-all duration-200 ease-out motion-reduce:transition-none",
-        collapsed ? "size-10 self-center justify-center rounded-xl" : "h-10 w-full gap-1.5 rounded-xl px-2",
+        collapsed ? "size-10 self-center justify-center rounded-xl" : "h-10 w-full gap-2.5 rounded-xl px-2.5",
         active
           ? "bg-[#f7f7f4] text-[#1f221c]"
           : "text-[#6e736b] hover:bg-[#f7f7f4] hover:text-[#1f221c]",
@@ -117,12 +111,6 @@ function NavRow({
         ].join(" ")}
         aria-hidden="true"
       />
-      {active && !collapsed && (
-        <span
-          className="absolute left-0 top-1/2 h-4 w-px -translate-y-1/2 bg-black/[0.08]"
-          aria-hidden="true"
-        />
-      )}
       <span
         className={[
           "relative z-10 flex size-5 shrink-0 items-center justify-center transition-colors duration-200 ease-out",
@@ -196,17 +184,15 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </button>
         </div>
 
-        <div className={collapsed ? "mt-4 flex-1 space-y-4" : "mt-5 flex-1 space-y-5"}>
-          {NAV_GROUPS.map((group, index) => (
-            <div key={index} className="flex flex-col gap-0">
-              {group.map((item) => (
-                <NavRow key={item.label} item={item} collapsed={collapsed} />
-              ))}
-            </div>
+        <div className={collapsed ? "mt-4 flex flex-col gap-1.5" : "mt-5 flex flex-col gap-1"}>
+          {NAV_ITEMS.map((item) => (
+            <NavRow key={item.label} item={item} collapsed={collapsed} />
           ))}
         </div>
 
-        <div className={collapsed ? "mt-4 flex justify-center" : "mt-5"}>
+        <div className="flex-1" />
+
+        <div className={collapsed ? "pt-3 flex justify-center" : "pt-4"}>
           {collapsed ? (
             <Tooltip label="Credo workspace">
               <button

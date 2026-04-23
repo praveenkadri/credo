@@ -14,6 +14,7 @@ type HeroGraphProps = {
   currentValue: string;
   deltaText: string;
   deltaPositive?: boolean;
+  interpretation?: string;
   points?: HeroGraphPoint[];
   ranges?: string[];
   activeRange?: string;
@@ -74,6 +75,7 @@ export function HeroGraph({
   currentValue,
   deltaText,
   deltaPositive = true,
+  interpretation,
   points = DEFAULT_POINTS,
   ranges = ["1D", "1W", "1M", "3M", "6M", "YTD", "1Y", "ALL"],
   activeRange = "1D",
@@ -142,7 +144,7 @@ export function HeroGraph({
   return (
     <section
       className={cn(
-        "rounded-[28px] bg-[#fafaf7] px-5 py-5 pb-4 shadow-[0_1px_2px_rgba(31,34,28,0.02),0_12px_30px_rgba(31,34,28,0.035)]",
+        "rounded-2xl bg-neutral-50/40 px-5 py-4",
         className
       )}
     >
@@ -168,7 +170,7 @@ export function HeroGraph({
 
       <div
         ref={containerRef}
-        className="relative mt-6 rounded-2xl bg-[#f1f2ef] px-2 pb-1 pt-2"
+        className="relative mt-5 rounded-xl bg-neutral-100/60 px-5 py-4"
         onMouseMove={(e) => updateHover(e.clientX)}
         onMouseEnter={(e) => updateHover(e.clientX)}
       >
@@ -278,6 +280,12 @@ export function HeroGraph({
           </button>
         </div>
       </div>
+
+      {interpretation ? (
+        <p className="mt-3 border-t border-[#e4e8df] pt-3 text-[13px] leading-6 text-[#62675f]">
+          {interpretation}
+        </p>
+      ) : null}
     </section>
   );
 }
