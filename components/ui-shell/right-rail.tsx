@@ -32,7 +32,7 @@ export default function RightRail() {
         <SurfacePanel
           title="Today"
           eyebrow="Operational focus"
-          className="shell-enter bg-neutral-50/50 shadow-none"
+          className="shell-enter relative overflow-hidden rounded-[28px] bg-white/45 backdrop-blur-md ring-1 ring-white/40 shadow-[0_8px_30px_rgba(15,23,42,0.04)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.20),rgba(255,255,255,0.02))] [&>*]:relative [&>*]:z-[1]"
           tone="soft"
         >
           <RailList items={todayItems} emptyMessage="No items due today" />
@@ -41,7 +41,7 @@ export default function RightRail() {
         <SurfacePanel
           title="Next"
           eyebrow="Upcoming"
-          className="shell-enter shell-enter-delay-1 bg-neutral-50/50 shadow-none"
+          className="shell-enter shell-enter-delay-1 relative overflow-hidden rounded-[28px] bg-white/45 backdrop-blur-md ring-1 ring-white/40 shadow-[0_8px_30px_rgba(15,23,42,0.04)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.20),rgba(255,255,255,0.02))] [&>*]:relative [&>*]:z-[1]"
           tone="inset"
         >
           <RailList items={nextItems} emptyMessage="No upcoming deadlines" />

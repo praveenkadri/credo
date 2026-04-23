@@ -110,7 +110,7 @@ function CompaniesSection() {
                 router.push(`/companies/${company.id}`);
               }
             }}
-            className="group grid cursor-pointer gap-y-4 rounded-xl border border-neutral-200/40 bg-white/60 px-3 py-6 transition-all duration-200 ease-out hover:bg-neutral-50 focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0"
+            className="group relative grid cursor-pointer gap-y-4 rounded-2xl bg-white/38 px-3 py-6 backdrop-blur-sm ring-1 ring-white/35 shadow-[0_1px_1px_rgba(15,23,42,0.02),0_8px_24px_rgba(15,23,42,0.03)] transition-all duration-200 ease-out before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.16),rgba(255,255,255,0.02))] hover:-translate-y-[1px] hover:bg-white/48 hover:shadow-[0_4px_18px_rgba(15,23,42,0.05)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0"
           >
             <div className="flex min-w-0 items-start gap-3.5">
               <span
