@@ -58,7 +58,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$128,430.00",
     employeeCount: 94,
     state: "Healthy",
-    stateDetail: "Run in normal range.",
+    stateDetail: "Run in normal range",
   },
   {
     id: "northline-services",
@@ -67,7 +67,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$84,920.00",
     employeeCount: 61,
     state: "Needs review",
-    stateDetail: "2 payroll edits due 3:00 PM.",
+    stateDetail: "2 edits due 3:00 PM",
   },
   {
     id: "summit-industrial",
@@ -76,7 +76,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$214,580.00",
     employeeCount: 143,
     state: "Healthy",
-    stateDetail: "No outlier shifts.",
+    stateDetail: "No outlier shifts",
   },
   {
     id: "willow-hospitality",
@@ -85,7 +85,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$71,240.00",
     employeeCount: 48,
     state: "Funding due",
-    stateDetail: "Funding confirm in 2 days.",
+    stateDetail: "Funding due in 2 days",
     fundingDueInDays: 2,
   },
   {
@@ -95,7 +95,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$167,390.00",
     employeeCount: 119,
     state: "Healthy",
-    stateDetail: "Hiring changes reconciled.",
+    stateDetail: "Hiring changes reconciled",
   },
 ];
 

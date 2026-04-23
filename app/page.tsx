@@ -87,7 +87,7 @@ function CompaniesSection() {
       <div className="-mx-3 mb-3 flex items-end justify-between gap-3 px-3">
         <div>
           <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-neutral-400">Companies</p>
-          <h2 className="mt-1 text-[18px] font-medium tracking-[-0.02em] text-neutral-700">Your companies</h2>
+          <h2 className="mt-1 text-[13px] font-medium tracking-[-0.01em] text-neutral-700">Your companies</h2>
         </div>
         <Link
           href="/companies/new"
@@ -129,7 +129,7 @@ function CompaniesSection() {
                   {company.lastActivity}
                 </p>
                 <p className={["mt-1 text-[12px] leading-[1.35]", STATE_TONE[company.state]].join(" ")}>
-                  {company.state} - {company.stateDetail}
+                  {company.state} · {company.stateDetail}
                 </p>
               </div>
             </div>
