@@ -32,7 +32,7 @@ export default function RightRail() {
         <SurfacePanel
           title="Today"
           eyebrow="Operational focus"
-          className="shell-enter bg-[#fafaf8] shadow-[0_1px_1px_rgba(31,34,28,0.01),0_4px_10px_rgba(31,34,28,0.014)]"
+          className="shell-enter bg-neutral-50/50 shadow-none"
           tone="soft"
         >
           <RailList items={todayItems} emptyMessage="No items due today" />
@@ -41,7 +41,7 @@ export default function RightRail() {
         <SurfacePanel
           title="Next"
           eyebrow="Upcoming"
-          className="shell-enter shell-enter-delay-1 bg-[#f7f8f5] shadow-[0_1px_1px_rgba(31,34,28,0.008)]"
+          className="shell-enter shell-enter-delay-1 bg-neutral-50/50 shadow-none"
           tone="inset"
         >
           <RailList items={nextItems} emptyMessage="No upcoming deadlines" />

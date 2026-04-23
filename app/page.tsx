@@ -72,7 +72,7 @@ function SurfaceList() {
 
 function CompaniesSection() {
   const router = useRouter();
-  const AVATAR_TONES = ["bg-neutral-100", "bg-neutral-100/85", "bg-neutral-100/70"];
+  const AVATAR_TONES = ["bg-neutral-50/60", "bg-neutral-100/85", "bg-neutral-100/70"];
 
   const initialsFor = (name: string) =>
     name
