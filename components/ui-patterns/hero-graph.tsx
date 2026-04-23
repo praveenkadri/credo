@@ -155,7 +155,7 @@ export function HeroGraph({
     return () => ro.disconnect();
   }, []);
 
-  const height = 362;
+  const height = 248;
   const topPad = 24;
   const rightPad = 10;
   const bottomPad = 28;
@@ -232,14 +232,14 @@ export function HeroGraph({
 
       <div
         ref={containerRef}
-        className="relative mt-5 rounded-xl bg-neutral-100/60 px-5 py-4"
+        className="relative mt-3 rounded-xl bg-neutral-100/60 px-5 py-4"
         onMouseMove={(e) => updateHover(e.clientX)}
         onMouseEnter={(e) => updateHover(e.clientX)}
       >
         <svg
           key={`${selectedRange}-${selectedMode}`}
           viewBox={`0 0 ${plotWidth} ${height}`}
-          className="block h-[362px] w-full overflow-visible"
+          className="block h-[248px] w-full overflow-visible"
         >
           <defs>
             <linearGradient id={`hero-graph-fill-${ids}`} x1="0" x2="0" y1="0" y2="1">
