@@ -97,24 +97,24 @@ function NavRow({
       type="button"
       aria-label={collapsed ? item.label : undefined}
       className={[
-        "group relative flex cursor-pointer items-center transition-all duration-200 ease-out motion-reduce:transition-none",
+        "group relative flex cursor-pointer items-center transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
         collapsed ? "size-10 self-center justify-center rounded-xl" : "h-10 w-full gap-2.5 rounded-xl px-2.5",
         active
-          ? "bg-[#f7f7f4] text-[#1f221c]"
-          : "text-[#6e736b] hover:bg-[#f7f7f4] hover:text-[#1f221c]",
+          ? "bg-neutral-100/80 text-neutral-900"
+          : "text-[#6e736b] hover:bg-neutral-100/70 hover:text-neutral-900",
       ].join(" ")}
     >
       <span
         className={[
-          "pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200 ease-out",
-          active ? "bg-[#f7f7f4] opacity-100" : "",
+          "pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]",
+          active ? "bg-neutral-100/80 opacity-100" : "",
         ].join(" ")}
         aria-hidden="true"
       />
       <span
         className={[
-          "relative z-10 flex size-5 shrink-0 items-center justify-center transition-colors duration-200 ease-out",
-          active ? "text-[#575b55]" : "text-[#93988f] group-hover:text-[#6e736b]",
+          "relative z-10 flex size-5 shrink-0 items-center justify-center transition-[color,opacity] duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]",
+          active ? "text-[#575b55] opacity-100" : "text-[#93988f] opacity-85 group-hover:text-[#6e736b] group-hover:opacity-100",
         ].join(" ")}
       >
         {item.icon()}
@@ -159,7 +159,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       className={[
         "relative hidden h-full shrink-0 bg-transparent md:flex md:flex-col",
-        "transition-[width] duration-300 ease-out motion-reduce:transition-none",
+        "transition-[width] duration-[240ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
         collapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
       ].join(" ")}
       aria-label="Sidebar"
@@ -176,7 +176,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             type="button"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={onToggle}
-            className="inline-flex size-10 cursor-pointer items-center justify-center rounded-xl bg-transparent text-[#6e736b] transition-all duration-200 ease-out hover:bg-[#f7f7f4] hover:text-[#1f221c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/[0.08]"
+            className="inline-flex size-10 cursor-pointer items-center justify-center rounded-xl bg-transparent text-[#6e736b] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M4 5H12M4 8H12M4 11H12" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
@@ -198,7 +198,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <button
                 type="button"
                 aria-label="Credo workspace"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#1f221c] text-[12.5px] font-medium text-white transition-all duration-200 ease-out"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#1f221c] text-[12.5px] font-medium text-white transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]"
               >
                 C
               </button>
@@ -206,7 +206,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           ) : (
             <button
               type="button"
-              className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[#575b55] transition-all duration-200 ease-out hover:bg-[#f7f7f4]"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[#575b55] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900"
             >
               <Avatar initials="C" />
               <div className="min-w-0">

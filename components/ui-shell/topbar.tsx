@@ -37,7 +37,7 @@ export default function Topbar() {
             </Button>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#fafaf7] px-2.5 pr-3 text-sm font-medium text-[#575b55] transition-all duration-200 ease-out hover:bg-[#f3f4f1] hover:text-[#1f221c]"
+              className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#fafaf7] px-2.5 pr-3 text-sm font-medium text-[#575b55] transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/60 hover:text-[#1f221c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
             >
               <Avatar initials="C" compact />
               <span className="hidden sm:block">Credo workspace</span>

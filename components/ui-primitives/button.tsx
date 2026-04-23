@@ -26,7 +26,7 @@ export function Button({
       type={type}
       className={[
         VARIANT_CLASS[variant],
-        "transition-all duration-200 ease-out hover:bg-[#f3f4ef] hover:text-[#1f221c] active:bg-[#eef0ea] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(31,34,28,0.08)]",
+        "transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/60 hover:text-neutral-900 active:bg-[#eef0ea] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40",
         className,
       ]
         .filter(Boolean)

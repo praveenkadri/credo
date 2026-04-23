@@ -16,6 +16,12 @@
   --interactive-hover: rgba(31, 34, 28, 0.035);
   --interactive-active: rgba(31, 34, 28, 0.06);
   --shadow-whisper: 0 1px 2px rgba(31, 34, 28, 0.02), 0 8px 24px rgba(31, 34, 28, 0.03);
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -54,21 +60,44 @@ select {
 .shell-enter {
   opacity: 0;
   transform: translateY(6px);
-  animation: shellEnter 300ms ease-out forwards;
+  animation: shellEnter 220ms var(--ease-out-soft) forwards;
 }
 
 .shell-enter-delay-1 {
-  animation-delay: 20ms;
-}
-
-.shell-enter-delay-2 {
   animation-delay: 40ms;
 }
 
+.shell-enter-delay-2 {
+  animation-delay: 80ms;
+}
+
 .shell-enter-delay-3 {
-  animation-delay: 60ms;
+  animation-delay: 120ms;
 }
 
 .shell-enter-delay-4 {
-  animation-delay: 80ms;
+  animation-delay: 160ms;
+}
+
+@keyframes bannerEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.banner-enter {
+  animation: bannerEnter var(--motion-base) var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }

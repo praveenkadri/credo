@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HeroGraph } from "@/components/ui-patterns/hero-graph";
@@ -35,15 +35,18 @@ const BANNER_STYLES: Record<BannerVariant, string> = {
 
 function AttentionBanner({
   variant = "attention",
+  exiting = false,
   onDismiss,
 }: {
   variant?: BannerVariant;
+  exiting?: boolean;
   onDismiss: () => void;
 }) {
   return (
     <div
       className={[
-        "mb-3 flex w-full items-center justify-between rounded-lg px-3.5 py-2.5",
+        "banner-enter flex w-full items-center justify-between overflow-hidden rounded-lg px-3.5 py-2.5 transition-[opacity,transform,max-height,margin] duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+        exiting ? "mb-0 max-h-0 -translate-y-1 opacity-0 py-0" : "mb-3 max-h-14 translate-y-0 opacity-100",
         BANNER_STYLES[variant],
       ].join(" ")}
       role="status"
@@ -53,7 +56,7 @@ function AttentionBanner({
       <div className="ml-4 flex items-center gap-2">
         <button
           type="button"
-          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-neutral-600 transition-colors duration-150 hover:bg-white/45 hover:text-neutral-700"
+          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-neutral-600 transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/55 hover:text-neutral-800"
         >
           View
         </button>
@@ -61,7 +64,7 @@ function AttentionBanner({
           type="button"
           aria-label="Dismiss attention banner"
           onClick={onDismiss}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[13px] text-neutral-500 transition-colors duration-150 hover:bg-white/45 hover:text-neutral-700"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[13px] text-neutral-500 transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/55 hover:text-neutral-700"
         >
           ×
         </button>
@@ -110,7 +113,7 @@ function CompaniesSection() {
                 router.push(`/companies/${company.id}`);
               }
             }}
-            className="group relative grid cursor-pointer gap-y-4 rounded-[24px] bg-white/70 px-6 py-5 ring-1 ring-white/60 shadow-[0_1px_1px_rgba(15,23,42,0.02),0_8px_24px_rgba(15,23,42,0.03)] transition-all duration-200 ease-out before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18),rgba(255,255,255,0.03))] hover:-translate-y-[1px] hover:bg-white/78 hover:shadow-[0_4px_18px_rgba(15,23,42,0.05)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0"
+            className="group relative grid cursor-pointer gap-y-4 rounded-[24px] bg-white/70 px-6 py-5 ring-1 ring-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18),rgba(255,255,255,0.03))] hover:-translate-y-[1px] hover:bg-white/85 hover:shadow-[0_12px_34px_rgba(15,23,42,0.055)] active:translate-y-0 active:scale-[0.998] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0 motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
           >
             <div className="flex min-w-0 items-start gap-3.5">
               <span
@@ -148,7 +151,7 @@ function CompaniesSection() {
                 <p className="text-[24px] font-semibold leading-6 tracking-[-0.02em] text-[#1f221c]">{company.payrollAmount}</p>
                 <p className="mt-1 text-[12px] text-neutral-500">{company.employeeCount} employees</p>
               </div>
-              <span className="text-[18px] leading-none text-neutral-300 transition duration-200 group-hover:translate-x-1 group-hover:text-neutral-400">
+              <span className="text-[18px] leading-none text-neutral-300 transition-transform duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-[2px] group-hover:text-neutral-400">
                 ›
               </span>
             </div>
@@ -161,11 +164,25 @@ function CompaniesSection() {
 
 export default function HomePage() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [bannerExiting, setBannerExiting] = useState(false);
+
+  useEffect(() => {
+    if (!bannerExiting) return;
+    const timer = setTimeout(() => {
+      setBannerDismissed(true);
+      setBannerExiting(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [bannerExiting]);
+
+  const dismissBanner = () => {
+    setBannerExiting(true);
+  };
 
   return (
     <div className="w-full pb-12">
       {!bannerDismissed ? (
-        <AttentionBanner variant="attention" onDismiss={() => setBannerDismissed(true)} />
+        <AttentionBanner variant="attention" exiting={bannerExiting} onDismiss={dismissBanner} />
       ) : null}
 
       <section className="pb-10">

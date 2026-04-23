@@ -6,7 +6,7 @@ export function Input({ className, ...props }: InputProps) {
   return (
     <input
       className={[
-        "h-10 w-full rounded-xl bg-[#fafaf7] px-3 text-sm text-[#575b55] placeholder:text-[#93988f] outline-none transition-all duration-200 ease-out hover:bg-[#f3f4ef] focus:bg-[#f3f4ef] focus:text-[#1f221c] focus:shadow-[0_0_0_3px_rgba(31,34,28,0.08)]",
+        "h-10 w-full rounded-xl bg-[#fafaf7] px-3 text-sm text-[#575b55] placeholder:text-[#93988f] outline-none transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/60 focus:bg-neutral-100/60 focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40",
         className,
       ]
         .filter(Boolean)

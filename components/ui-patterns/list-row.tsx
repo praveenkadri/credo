@@ -20,7 +20,7 @@ export function ListRow({
   as = "button",
 }: ListRowProps) {
   const rowClass = [
-    "group flex w-full items-start gap-3 rounded-xl bg-transparent px-3 py-3 text-left transition-all duration-200 ease-out hover:bg-[#f3f4ef]",
+    "group flex w-full items-start gap-3 rounded-xl bg-transparent px-3 py-3 text-left transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f3f4ef]",
     className,
   ]
     .filter(Boolean)

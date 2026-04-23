@@ -128,6 +128,8 @@ export function HeroGraph({
   const [selectedMode, setSelectedMode] = React.useState(mode);
   const [width, setWidth] = React.useState(0);
   const [hoverIndex, setHoverIndex] = React.useState<number>(Math.floor(points.length * 0.72));
+  const [isHovering, setIsHovering] = React.useState(false);
+  const [isRangeTransitioning, setIsRangeTransitioning] = React.useState(false);
 
   React.useEffect(() => {
     setSelectedRange(activeRange);
@@ -136,6 +138,14 @@ export function HeroGraph({
   React.useEffect(() => {
     setSelectedMode(mode);
   }, [mode]);
+
+  React.useEffect(() => {
+    setIsRangeTransitioning(true);
+    const frame = requestAnimationFrame(() => {
+      setIsRangeTransitioning(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selectedRange, selectedMode]);
 
   const rangePoints = React.useMemo(() => getDataForRange(points, selectedRange), [points, selectedRange]);
   const displayPoints = React.useMemo(
@@ -234,12 +244,18 @@ export function HeroGraph({
         ref={containerRef}
         className="relative mt-3 rounded-xl bg-neutral-100/60 px-5 py-4"
         onMouseMove={(e) => updateHover(e.clientX)}
-        onMouseEnter={(e) => updateHover(e.clientX)}
+        onMouseEnter={(e) => {
+          setIsHovering(true);
+          updateHover(e.clientX);
+        }}
+        onMouseLeave={() => setIsHovering(false)}
       >
         <svg
-          key={`${selectedRange}-${selectedMode}`}
           viewBox={`0 0 ${plotWidth} ${height}`}
-          className="block h-[248px] w-full overflow-visible"
+          className={cn(
+            "block h-[248px] w-full overflow-visible transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+            isRangeTransitioning ? "translate-y-[2px] opacity-65" : "translate-y-0 opacity-100"
+          )}
         >
           <defs>
             <linearGradient id={`hero-graph-fill-${ids}`} x1="0" x2="0" y1="0" y2="1">
@@ -292,13 +308,20 @@ export function HeroGraph({
             y2={height - bottomPad}
             stroke="rgba(212,212,212,0.5)"
             strokeWidth="1"
+            className={cn(
+              "transition-opacity duration-[120ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+              isHovering ? "opacity-100" : "opacity-0"
+            )}
           />
 
           <circle cx={activePoint.x} cy={activePoint.y} r="5.5" fill="#1f7a4c" stroke="#fafaf7" strokeWidth="2.5" />
         </svg>
 
         <div
-          className="pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
+          className={cn(
+            "pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition-[opacity,transform] duration-[120ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+            isHovering ? "translate-y-0 opacity-100" : "translate-y-[3px] opacity-0"
+          )}
           style={{ left: tooltipLeft, top: tooltipTop }}
         >
           <p className="font-medium text-[#1f221c]">{hoverDisplayValue}</p>
@@ -320,8 +343,10 @@ export function HeroGraph({
                   setHoverIndex(Math.floor(nextLength * 0.72));
                 }}
                 className={cn(
-                  "inline-flex h-8 items-center rounded-xl px-3 text-xs font-medium transition-all duration-200 ease-out",
-                  active ? "bg-[#e9ece4] text-[#1f221c]" : "text-[#6e736b] hover:bg-[#f3f4ef] hover:text-[#1f221c]"
+                  "inline-flex h-8 items-center rounded-xl px-3 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+                  active
+                    ? "bg-neutral-100 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(31,34,28,0.05)]"
+                    : "text-[#6e736b] hover:bg-neutral-100/70 hover:text-neutral-900"
                 )}
               >
                 {rangeOption}
@@ -335,8 +360,8 @@ export function HeroGraph({
             type="button"
             onClick={() => setSelectedMode("Value")}
             className={cn(
-              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium",
-              selectedMode === "Value" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
+              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+              selectedMode === "Value" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b] hover:text-neutral-900"
             )}
           >
             Value
@@ -345,8 +370,8 @@ export function HeroGraph({
             type="button"
             onClick={() => setSelectedMode("Returns")}
             className={cn(
-              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium",
-              selectedMode === "Returns" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
+              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
+              selectedMode === "Returns" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b] hover:text-neutral-900"
             )}
           >
             Returns
