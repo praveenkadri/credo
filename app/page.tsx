@@ -113,7 +113,7 @@ function CompaniesSection() {
                 router.push(`/companies/${company.id}`);
               }
             }}
-            className="group relative grid cursor-pointer gap-y-4 rounded-[24px] bg-white/70 px-6 py-5 ring-1 ring-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18),rgba(255,255,255,0.03))] hover:-translate-y-[1px] hover:bg-white/85 hover:shadow-[0_12px_34px_rgba(15,23,42,0.055)] active:translate-y-0 active:scale-[0.998] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0 motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
+            className="group relative grid cursor-pointer gap-y-4 rounded-[24px] bg-white/55 px-6 py-5 ring-1 ring-neutral-200/40 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition-all duration-[180ms] ease-out before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18),rgba(255,255,255,0.03))] hover:-translate-y-[1px] hover:bg-white/70 hover:shadow-[0_8px_24px_rgba(15,23,42,0.05)] active:translate-y-0 active:scale-[0.998] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] md:items-center md:gap-x-6 md:gap-y-0 motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
           >
             <div className="flex min-w-0 items-start gap-3.5">
               <span
@@ -151,7 +151,7 @@ function CompaniesSection() {
                 <p className="text-[24px] font-semibold leading-6 tracking-[-0.02em] text-[#1f221c]">{company.payrollAmount}</p>
                 <p className="mt-1 text-[12px] text-neutral-500">{company.employeeCount} employees</p>
               </div>
-              <span className="text-[18px] leading-none text-neutral-300 transition-transform duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-[2px] group-hover:text-neutral-400">
+              <span className="text-[18px] leading-none text-neutral-500 transition-transform duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-[2px]">
                 ›
               </span>
             </div>
