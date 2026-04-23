@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HeroGraph } from "@/components/ui-patterns/hero-graph";
@@ -9,17 +10,63 @@ import { SurfacePanel } from "@/components/ui-patterns/surface-panel";
 import {
   COMPANIES,
   OPERATIONAL_EVENTS,
+  getAttentionBannerText,
   getChartInterpretation,
   getOperatingSummary,
 } from "@/lib/overview-decision-data";
 
 const STATE_TONE: Record<string, string> = {
   Healthy: "text-[#5f685d]",
-  "Needs review": "text-[#4f5f4f]",
-  "Funding due": "text-[#5b6651]",
+  "Needs review": "text-neutral-700",
+  "Funding due": "text-[#6a6252]",
   "Invoice backlog": "text-[#5f6557]",
   "Filing soon": "text-[#5d6456]",
 };
+
+type BannerVariant = "neutral" | "attention" | "critical";
+
+const BANNER_STYLES: Record<BannerVariant, string> = {
+  neutral: "border border-neutral-200/60 bg-neutral-100/70 text-neutral-700",
+  attention: "border border-neutral-200/60 bg-neutral-100/70 text-neutral-700",
+  critical: "border border-red-100/70 bg-red-50/60 text-neutral-700",
+};
+
+function AttentionBanner({
+  variant = "attention",
+  onDismiss,
+}: {
+  variant?: BannerVariant;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      className={[
+        "mb-4 flex max-w-3xl items-center justify-between rounded-lg px-3.5 py-2.5",
+        BANNER_STYLES[variant],
+      ].join(" ")}
+      role="status"
+      aria-live="polite"
+    >
+      <p className="text-[12px] font-medium tracking-[-0.005em]">{getAttentionBannerText()}</p>
+      <div className="ml-4 flex items-center gap-2">
+        <button
+          type="button"
+          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-neutral-600 transition-colors duration-150 hover:bg-white/45 hover:text-neutral-700"
+        >
+          View
+        </button>
+        <button
+          type="button"
+          aria-label="Dismiss attention banner"
+          onClick={onDismiss}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[13px] text-neutral-500 transition-colors duration-150 hover:bg-white/45 hover:text-neutral-700"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function OperationalPulse() {
   return (
@@ -84,14 +131,14 @@ function CompaniesSection() {
 
   return (
     <section className="mt-4 shell-enter shell-enter-delay-2">
-      <div className="-mx-3 mb-3 flex items-end justify-between gap-3 px-3">
+      <div className="-mx-3 mb-3 grid items-end gap-3 px-3 md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)]">
         <div>
           <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-neutral-400">Companies</p>
           <h2 className="mt-1 text-[13px] font-medium tracking-[-0.01em] text-neutral-700">Your companies</h2>
         </div>
         <Link
           href="/companies/new"
-          className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-[#5f645c] transition-colors duration-150 hover:bg-[#f7f8f4] hover:text-[#1f221c] md:mr-7"
+          className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-[#5f645c] transition-colors duration-150 hover:bg-[#f7f8f4] hover:text-[#1f221c] md:mr-7 md:justify-self-end"
         >
           Add company
         </Link>
@@ -128,8 +175,10 @@ function CompaniesSection() {
                 <p className="mt-0.5 truncate text-[12px] leading-[1.3] text-[#6e736b] transition-colors duration-200 group-hover:text-neutral-600">
                   {company.lastActivity}
                 </p>
-                <p className={["mt-1 text-[12px] leading-[1.35]", STATE_TONE[company.state]].join(" ")}>
-                  {company.state} · {company.stateDetail}
+                <p className="mt-1 text-[12px] leading-[1.35] text-neutral-500">
+                  <span className={["font-medium", STATE_TONE[company.state]].join(" ")}>{company.state}</span>
+                  <span className="text-neutral-400"> · </span>
+                  <span>{company.stateDetail}</span>
                 </p>
               </div>
             </div>
@@ -151,8 +200,14 @@ function CompaniesSection() {
 }
 
 export default function HomePage() {
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
   return (
     <div className="w-full pb-20">
+      {!bannerDismissed ? (
+        <AttentionBanner variant="attention" onDismiss={() => setBannerDismissed(true)} />
+      ) : null}
+
       <div className="mb-4 cursor-default">
         <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#93988f]">Overview</p>
         <h1 className="mt-px text-[40px] font-semibold tracking-[-0.043em] text-[#1f221c]">

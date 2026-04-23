@@ -67,7 +67,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$84,920.00",
     employeeCount: 61,
     state: "Needs review",
-    stateDetail: "2 edits due 3:00 PM",
+    stateDetail: "2 edits",
   },
   {
     id: "summit-industrial",
@@ -85,7 +85,7 @@ export const COMPANIES: CompanyRecord[] = [
     payrollAmount: "$71,240.00",
     employeeCount: 48,
     state: "Funding due",
-    stateDetail: "Funding due in 2 days",
+    stateDetail: "Funding due",
     fundingDueInDays: 2,
   },
   {
@@ -208,16 +208,20 @@ export const UPCOMING_DEADLINES: DeadlineItem[] = [
 
 export function getOperatingSummary() {
   const healthyCompanies = COMPANIES.filter((company) => company.state === "Healthy").length;
+  return `${healthyCompanies} companies healthy`;
+}
+
+export function getAttentionBannerText() {
   const reviewToday = ATTENTION_ITEMS.filter((item) => item.needsReviewToday).length;
   const nextFundingDue = COMPANIES.filter((company) => typeof company.fundingDueInDays === "number")
     .map((company) => company.fundingDueInDays as number)
     .sort((a, b) => a - b)[0];
 
   if (typeof nextFundingDue === "number") {
-    return `${healthyCompanies} companies healthy. ${reviewToday} items need review today. Next payroll funding due in ${nextFundingDue} days.`;
+    return `${reviewToday} items to review · Funding due in ${nextFundingDue} days`;
   }
 
-  return `${healthyCompanies} companies healthy. ${reviewToday} items need review today.`;
+  return `${reviewToday} items to review`;
 }
 
 export function getChartInterpretation() {

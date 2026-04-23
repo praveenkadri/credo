@@ -49,6 +49,46 @@ const DEFAULT_POINTS: HeroGraphPoint[] = [
   { label: "9:00 PM", value: 47 },
 ];
 
+const RANGE_SERIES_CONFIG: Record<
+  string,
+  { count: number; labelPrefix: string; multiplier: number; wobble: number }
+> = {
+  "1W": { count: 7, labelPrefix: "Day", multiplier: 0.94, wobble: 1.8 },
+  "1M": { count: 12, labelPrefix: "Wk", multiplier: 0.98, wobble: 2.6 },
+  "3M": { count: 14, labelPrefix: "Wk", multiplier: 1.03, wobble: 3.2 },
+  "6M": { count: 16, labelPrefix: "Wk", multiplier: 1.07, wobble: 3.8 },
+  YTD: { count: 18, labelPrefix: "Wk", multiplier: 1.11, wobble: 4.4 },
+  "1Y": { count: 20, labelPrefix: "Mo", multiplier: 1.15, wobble: 4.9 },
+  ALL: { count: 22, labelPrefix: "Mo", multiplier: 1.2, wobble: 5.4 },
+};
+
+function getDataForRange(points: HeroGraphPoint[], range: string): HeroGraphPoint[] {
+  if (range === "1D" || !RANGE_SERIES_CONFIG[range]) return points;
+
+  const config = RANGE_SERIES_CONFIG[range];
+  const lastIndex = Math.max(config.count - 1, 1);
+
+  return Array.from({ length: config.count }, (_, index) => {
+    const sourceIndex = Math.round((index / lastIndex) * (points.length - 1));
+    const source = points[sourceIndex];
+    const trend = (index / lastIndex - 0.5) * config.wobble;
+    const wave = Math.sin(index * 0.78) * (config.wobble * 0.7);
+    return {
+      label: `${config.labelPrefix} ${index + 1}`,
+      value: Math.max(1, Number((source.value * config.multiplier + trend + wave).toFixed(2))),
+    };
+  });
+}
+
+function getDataForMode(points: HeroGraphPoint[], mode: "Value" | "Returns"): HeroGraphPoint[] {
+  if (mode === "Value") return points;
+  const baseline = points[0]?.value ?? 1;
+  return points.map((point) => ({
+    label: point.label,
+    value: Number((((point.value - baseline) / baseline) * 100).toFixed(2)),
+  }));
+}
+
 function buildPath(points: { x: number; y: number }[]) {
   if (!points.length) return "";
   let d = `M ${points[0].x} ${points[0].y}`;
@@ -84,8 +124,24 @@ export function HeroGraph({
 }: HeroGraphProps) {
   const ids = React.useId();
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const [selectedRange, setSelectedRange] = React.useState(activeRange);
+  const [selectedMode, setSelectedMode] = React.useState(mode);
   const [width, setWidth] = React.useState(0);
   const [hoverIndex, setHoverIndex] = React.useState<number>(Math.floor(points.length * 0.72));
+
+  React.useEffect(() => {
+    setSelectedRange(activeRange);
+  }, [activeRange]);
+
+  React.useEffect(() => {
+    setSelectedMode(mode);
+  }, [mode]);
+
+  const rangePoints = React.useMemo(() => getDataForRange(points, selectedRange), [points, selectedRange]);
+  const displayPoints = React.useMemo(
+    () => getDataForMode(rangePoints, selectedMode),
+    [rangePoints, selectedMode]
+  );
 
   React.useEffect(() => {
     if (!containerRef.current) return;
@@ -107,12 +163,12 @@ export function HeroGraph({
   const innerWidth = Math.max(width - leftPad - rightPad, 40);
   const innerHeight = height - topPad - bottomPad;
 
-  const min = Math.min(...points.map((p) => p.value));
-  const max = Math.max(...points.map((p) => p.value));
+  const min = Math.min(...displayPoints.map((p) => p.value));
+  const max = Math.max(...displayPoints.map((p) => p.value));
   const range = Math.max(max - min, 1);
 
-  const svgPoints = points.map((point, index) => {
-    const x = leftPad + (index / (points.length - 1)) * innerWidth;
+  const svgPoints = displayPoints.map((point, index) => {
+    const x = leftPad + (index / (displayPoints.length - 1)) * innerWidth;
     const y = topPad + (1 - (point.value - min) / range) * innerHeight;
     return { ...point, x, y };
   });
@@ -124,8 +180,14 @@ export function HeroGraph({
   const trailingPath = buildPath(svgPoints.slice(safeHoverIndex));
   const fillPath = areaPath(svgPoints, height - bottomPad, safeHoverIndex);
 
-  const currentDisplayValue = currentValue || `$${activePoint.value.toLocaleString()}`;
-  const hoverDisplayValue = `$${activePoint.value.toLocaleString()}`;
+  const currentDisplayValue =
+    selectedMode === "Returns"
+      ? `${activePoint.value.toFixed(2)}%`
+      : currentValue || `$${activePoint.value.toLocaleString()}`;
+  const hoverDisplayValue =
+    selectedMode === "Returns"
+      ? `${activePoint.value.toFixed(2)}%`
+      : `$${activePoint.value.toLocaleString()}`;
   const hoverLabel = activePoint.label;
 
   const plotWidth = Math.max(width, 320);
@@ -137,7 +199,7 @@ export function HeroGraph({
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left - leftPad;
     const ratio = Math.min(Math.max(x / innerWidth, 0), 1);
-    const nextIndex = Math.round(ratio * (points.length - 1));
+    const nextIndex = Math.round(ratio * (displayPoints.length - 1));
     setHoverIndex(nextIndex);
   }
 
@@ -174,7 +236,11 @@ export function HeroGraph({
         onMouseMove={(e) => updateHover(e.clientX)}
         onMouseEnter={(e) => updateHover(e.clientX)}
       >
-        <svg viewBox={`0 0 ${plotWidth} ${height}`} className="block h-[362px] w-full overflow-visible">
+        <svg
+          key={`${selectedRange}-${selectedMode}`}
+          viewBox={`0 0 ${plotWidth} ${height}`}
+          className="block h-[362px] w-full overflow-visible"
+        >
           <defs>
             <linearGradient id={`hero-graph-fill-${ids}`} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="rgba(31,122,76,0.08)" />
@@ -242,18 +308,23 @@ export function HeroGraph({
 
       <div className="mt-4 flex items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-1.5">
-          {ranges.map((range) => {
-            const active = range === activeRange;
+          {ranges.map((rangeOption) => {
+            const active = rangeOption === selectedRange;
             return (
               <button
-                key={range}
+                key={rangeOption}
                 type="button"
+                onClick={() => {
+                  setSelectedRange(rangeOption);
+                  const nextLength = getDataForRange(points, rangeOption).length;
+                  setHoverIndex(Math.floor(nextLength * 0.72));
+                }}
                 className={cn(
                   "inline-flex h-8 items-center rounded-xl px-3 text-xs font-medium transition-all duration-200 ease-out",
                   active ? "bg-[#e9ece4] text-[#1f221c]" : "text-[#6e736b] hover:bg-[#f3f4ef] hover:text-[#1f221c]"
                 )}
               >
-                {range}
+                {rangeOption}
               </button>
             );
           })}
@@ -262,18 +333,20 @@ export function HeroGraph({
         <div className="inline-flex items-center rounded-xl bg-[#f3f4ef] p-1">
           <button
             type="button"
+            onClick={() => setSelectedMode("Value")}
             className={cn(
               "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium",
-              mode === "Value" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
+              selectedMode === "Value" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
             )}
           >
             Value
           </button>
           <button
             type="button"
+            onClick={() => setSelectedMode("Returns")}
             className={cn(
               "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium",
-              mode === "Returns" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
+              selectedMode === "Returns" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b]"
             )}
           >
             Returns
@@ -282,7 +355,7 @@ export function HeroGraph({
       </div>
 
       {interpretation ? (
-        <p className="mt-3 border-t border-[#e4e8df] pt-3 text-[13px] leading-6 text-[#62675f]">
+        <p className="mt-3 border-t border-[#e4e8df] pt-3 text-[13px] leading-6 text-neutral-600">
           {interpretation}
         </p>
       ) : null}
