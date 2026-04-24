@@ -228,7 +228,7 @@ export function HeroGraph({
       <div className="flex items-start justify-between gap-6">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#93988f]">{title}</p>
-          <h2 className="mt-2 text-[60px] font-medium leading-none tracking-[-0.05em] text-[#1f221c]">{currentDisplayValue}</h2>
+          <h2 className="mt-2 text-[60px] font-medium leading-none tracking-[-0.05em] text-neutral-950">{currentDisplayValue}</h2>
           <p
             className={cn(
               "mt-2 text-[17px] font-medium tracking-[-0.02em]",
@@ -311,7 +311,7 @@ export function HeroGraph({
             x2={activePoint.x}
             y1={topPad + 8}
             y2={height - bottomPad}
-            stroke="rgba(212,212,212,0.5)"
+            stroke="rgba(212,212,212,0.6)"
             strokeWidth="1"
             className={cn(
               "transition-opacity duration-[120ms] ease-[cubic-bezier(0.16,1,0.3,1)]",

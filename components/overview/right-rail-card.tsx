@@ -21,7 +21,7 @@ export function RightRailCard({
       eyebrow={eyebrow}
       className={cn(
         surfaceClass("rightRailCard"),
-        "[&_h2]:text-[12px] [&_h2]:text-neutral-500",
+        "[&_h2]:text-[12px] [&_h2]:text-neutral-600",
         className
       )}
       tone={tone}

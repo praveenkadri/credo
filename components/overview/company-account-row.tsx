@@ -64,7 +64,7 @@ export function CompanyAccountRow(company: CompanyAccountRowProps) {
               {company.state}
             </span>
           </div>
-          <p className="mt-1 truncate text-[13px] leading-[1.35] text-[#6e736b] transition-colors duration-200 group-hover:text-neutral-600">
+          <p className="mt-1 truncate text-[13px] leading-[1.35] text-neutral-600 transition-colors duration-200 group-hover:text-neutral-700">
             {company.stateDetail}
             <span className="mx-1 text-neutral-400">·</span>
             <span className={company.statusTone}>{company.lastActivity}</span>
