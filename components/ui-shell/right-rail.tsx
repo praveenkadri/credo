@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { RightRailCard } from "@/components/overview/right-rail-card";
 import { RightRailSection } from "@/components/overview/right-rail-section";
 import { rightRail } from "@/components/overview/overview-data";
 import { CompanyRightRailForId } from "@/components/company-detail/company-right-rail";
 import { DocumentsRightRail } from "@/components/documents/documents-right-rail";
+import { EmployeeRightRail } from "@/components/employees/employee-right-rail";
+import { PayrollRightRail } from "@/components/payroll/payroll-right-rail";
 import { SoftNotice } from "@/components/system/SoftNotice";
 import { SkeletonBlock } from "@/components/system/SkeletonBlock";
 import { buttonClassName } from "@/components/ui-primitives/button";
-import { getRouteCompanyId, isOverviewPath, routes } from "@/lib/routes";
+import { getRouteCompanyId, getRouteEmployeeId, isEmployeeDetailPath, isOverviewPath, routes } from "@/lib/routes";
 
 export default function RightRail() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [dashboardState, setDashboardState] = useState<{ hasCompanies: boolean; hasActivity: boolean } | null>(null);
   const companyId = useMemo(() => getRouteCompanyId(pathname), [pathname]);
+  const employeeId = useMemo(() => getRouteEmployeeId(pathname), [pathname]);
 
   useEffect(() => {
     if (!isOverviewPath(pathname)) {
@@ -49,16 +51,16 @@ export default function RightRail() {
     return <CompanyRightRailForId companyId={companyId} />;
   }
 
+  if (employeeId && isEmployeeDetailPath(pathname)) {
+    return <EmployeeRightRail employeeId={employeeId} />;
+  }
+
   if (pathname.startsWith(routes.documents)) {
-    return (
-      <DocumentsRightRail
-        filters={{
-          tab: searchParams.get("tab") ?? "pay-stubs",
-          source: searchParams.get("source") ?? "all",
-          month: searchParams.get("month") ?? "all",
-        }}
-      />
-    );
+    return <DocumentsRightRail />;
+  }
+
+  if (pathname.startsWith(routes.payroll)) {
+    return <PayrollRightRail />;
   }
 
   const isDashboardPath = isOverviewPath(pathname);

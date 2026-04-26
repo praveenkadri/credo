@@ -25,12 +25,12 @@ export function CompanyAccountList({ companies }: { companies: CompanyAccount[] 
     <section className="mt-6 shell-enter shell-enter-delay-2">
       <div className="mb-3 grid items-end gap-3 md:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)]">
         <div>
-          <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-neutral-400">Companies</p>
-          <h2 className="mt-1 text-[13px] font-medium tracking-[-0.01em] text-neutral-700">Your companies</h2>
+          <p className="type-caption text-neutral-400">Companies</p>
+          <h2 className="type-body-small mt-1 text-neutral-700">Your companies</h2>
         </div>
         <Link
           href={routes.companiesNew}
-          className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-[#5f645c] transition-colors duration-150 hover:bg-[#f7f8f4] hover:text-[#1f221c] md:justify-self-end"
+          className="type-button inline-flex h-8 items-center rounded-lg px-2.5 text-[#5f645c] transition-colors duration-150 hover:bg-[#f7f8f4] hover:text-[#1f221c] md:justify-self-end"
         >
           Add company
         </Link>

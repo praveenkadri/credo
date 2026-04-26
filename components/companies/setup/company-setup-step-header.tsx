@@ -43,13 +43,13 @@ export function CompanySetupStepHeader({
         <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400">{contextLabel}</p>
       ) : null}
       {showStepLabel ? (
-        <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="type-caption mt-1 text-neutral-400">
           {stepLabel}
         </p>
       ) : null}
-      <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.035em] text-[#1f221c]">{title}</h1>
-      {subtitle ? <p className="mt-2 max-w-[640px] text-[14px] leading-[1.5] text-neutral-600">{subtitle}</p> : null}
-      {reassurance ? <p className="mt-2 text-[13px] text-neutral-500">{reassurance}</p> : null}
+      <h1 className="type-page-title mt-2">{title}</h1>
+      {subtitle ? <p className="type-body mt-2 max-w-[640px] text-neutral-600">{subtitle}</p> : null}
+      {reassurance ? <p className="type-body-small mt-2 text-neutral-500">{reassurance}</p> : null}
     </div>
   );
 }

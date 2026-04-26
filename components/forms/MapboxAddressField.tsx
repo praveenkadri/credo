@@ -192,7 +192,7 @@ export function MapboxAddressField({
   return (
     <div ref={rootRef} className="space-y-3">
       <label className="block space-y-2">
-        <span className="text-[12px] font-medium text-neutral-600">{c.company.create.addressLabel}</span>
+        <span className="type-label text-neutral-600">{c.company.create.addressLabel}</span>
         <div className="relative">
           <Input
             value={query}
@@ -255,9 +255,9 @@ export function MapboxAddressField({
                       className="w-full rounded-xl px-3 py-2 text-left transition-colors duration-[160ms] hover:bg-neutral-100/70"
                       onClick={() => handleSuggestionSelect(suggestion)}
                     >
-                      <p className="text-[13px] text-neutral-800">{suggestion.line1 || suggestion.label}</p>
+                      <p className="type-body-small text-neutral-800">{suggestion.line1 || suggestion.label}</p>
                       {suggestionSecondaryLabel(suggestion) ? (
-                        <p className="mt-0.5 text-[12px] text-neutral-500">{suggestionSecondaryLabel(suggestion)}</p>
+                        <p className="type-caption mt-0.5 text-neutral-500">{suggestionSecondaryLabel(suggestion)}</p>
                       ) : null}
                     </button>
                   </li>
@@ -270,7 +270,7 @@ export function MapboxAddressField({
                       setOpen(false);
                       onChange(manualAddressFrom(normalizedValue, defaultCountry));
                     }}
-                    className="w-full rounded-xl px-3 py-2 text-left text-[13px] text-neutral-700 transition-colors duration-[160ms] hover:bg-neutral-100/70 hover:text-neutral-900"
+                    className="type-body-small w-full rounded-xl px-3 py-2 text-left text-neutral-700 transition-colors duration-[160ms] hover:bg-neutral-100/70 hover:text-neutral-900"
                   >
                     {c.addressField.manualEntryCta}
                   </button>
@@ -296,7 +296,7 @@ export function MapboxAddressField({
             onClick={() => {
               onShowUnitSuiteChange?.(true);
             }}
-            className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
+            className="type-body-small inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
           >
             {c.addressField.addUnitSuite}
           </button>
@@ -321,7 +321,7 @@ export function MapboxAddressField({
                 verified: false,
               });
             }}
-            className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
+            className="type-body-small inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
           >
             {c.addressField.changeAddress}
           </button>
@@ -330,7 +330,7 @@ export function MapboxAddressField({
 
       {showUnitSuiteForVerifiedAddress ? (
         <label className="block space-y-2">
-          <span className="text-[12px] font-medium text-neutral-600">{c.addressField.unitSuiteOptional}</span>
+          <span className="type-label text-neutral-600">{c.addressField.unitSuiteOptional}</span>
           <Input
             value={normalizedValue.unit}
             onChange={(event) =>
@@ -348,7 +348,7 @@ export function MapboxAddressField({
       {showManualInputs ? (
         <div className="space-y-3 rounded-2xl bg-white/60 p-3 ring-1 ring-neutral-200/50">
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.company.create.addressLabel}</span>
+            <span className="type-label text-neutral-600">{c.company.create.addressLabel}</span>
             <Input
               value={normalizedValue.line1}
               onChange={(event) => updateAddress({ line1: event.target.value, source: "manual", verified: false })}
@@ -361,7 +361,7 @@ export function MapboxAddressField({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.addressField.manualUnitSuiteOptional}</span>
+            <span className="type-label text-neutral-600">{c.addressField.manualUnitSuiteOptional}</span>
             <Input
               value={normalizedValue.unit}
               onChange={(event) =>
@@ -381,7 +381,7 @@ export function MapboxAddressField({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.addressField.city}</span>
+            <span className="type-label text-neutral-600">{c.addressField.city}</span>
             <Input
               value={normalizedValue.city}
               onChange={(event) => updateAddress({ city: event.target.value, source: "manual", verified: false })}
@@ -394,7 +394,7 @@ export function MapboxAddressField({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.addressField.provinceState}</span>
+            <span className="type-label text-neutral-600">{c.addressField.provinceState}</span>
             <Input
               value={normalizedValue.province}
               onChange={(event) => updateAddress({ province: event.target.value, source: "manual", verified: false })}
@@ -407,7 +407,7 @@ export function MapboxAddressField({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.addressField.postalCode}</span>
+            <span className="type-label text-neutral-600">{c.addressField.postalCode}</span>
             <Input
               value={normalizedValue.postalCode}
               onChange={(event) => updateAddress({ postalCode: event.target.value, source: "manual", verified: false })}
@@ -426,7 +426,7 @@ export function MapboxAddressField({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[12px] font-medium text-neutral-600">{c.addressField.country}</span>
+            <span className="type-label text-neutral-600">{c.addressField.country}</span>
             <Input
               value={normalizedValue.country}
               onChange={(event) => updateAddress({ country: event.target.value, source: "manual", verified: false })}
@@ -440,7 +440,7 @@ export function MapboxAddressField({
         </div>
       ) : null}
 
-      {showAddressError ? <p className="text-[12px] text-rose-900">{requiredErrorMessage}</p> : null}
+      {showAddressError ? <p className="type-body-small text-rose-900">{requiredErrorMessage}</p> : null}
 
       <input type="hidden" name="streetAddress" value={normalizedValue.line1 || normalizedValue.formattedAddress} />
       <input type="hidden" name="unitSuite" value={normalizedValue.unit} />

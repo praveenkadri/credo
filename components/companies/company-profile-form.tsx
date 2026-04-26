@@ -23,7 +23,7 @@ const FIELD_CLASS =
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-[28px] bg-white/70 p-6 ring-1 ring-neutral-200/40 shadow-[0_10px_28px_rgba(15,23,42,0.03)] md:p-7">
-      <h2 className="text-[16px] font-semibold tracking-[-0.02em] text-[#1f221c]">{title}</h2>
+      <h2 className="type-card-title">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -40,9 +40,9 @@ function Field({
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-[12px] font-medium text-neutral-600">{label}</span>
+      <span className="type-label text-neutral-600">{label}</span>
       {children}
-      {hint ? <p className="text-[12px] text-neutral-500">{hint}</p> : null}
+      {hint ? <p className="type-body-small text-neutral-500">{hint}</p> : null}
     </label>
   );
 }
@@ -210,7 +210,7 @@ export function CompanyProfileForm({
               }}
               className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
             />
-            <span className="text-[12px] text-neutral-700">Legal name is same as company name</span>
+            <span className="type-body-small text-neutral-700">Legal name is same as company name</span>
           </label>
 
           <Field label="Business established date">
@@ -267,7 +267,7 @@ export function CompanyProfileForm({
               className={FIELD_CLASS}
             />
           </Field>
-          <p className="text-[12px] text-neutral-500">
+          <p className="type-body-small text-neutral-500">
             Some tax fields are stored in profile metadata until dedicated schema columns are available.
           </p>
         </div>

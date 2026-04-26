@@ -66,7 +66,7 @@ export function CompanyRightRail({
             className="shell-enter shell-enter-delay-2"
           >
             <div className="space-y-3">
-              <p className="text-[13px] leading-[1.5] text-neutral-600">
+              <p className="type-body-small text-neutral-600">
                 {c.company.setup.completeSetupDescription}
               </p>
               <Link
@@ -86,7 +86,7 @@ export function CompanyRightRail({
             tone="inset"
             className="shell-enter shell-enter-delay-2"
           >
-            <p className="text-[13px] leading-[1.5] text-neutral-600">{c.company.setup.fundingDueDescription}</p>
+            <p className="type-body-small text-neutral-600">{c.company.setup.fundingDueDescription}</p>
           </RightRailCard>
         ) : null}
 
@@ -106,7 +106,7 @@ export function CompanyRightRail({
           className="shell-enter shell-enter-delay-4"
         >
           <div className="space-y-3">
-            <p className="text-[12px] leading-[1.45] text-neutral-500">
+            <p className="type-caption text-neutral-500">
               {c.company.dangerZone.description}
             </p>
             <Link

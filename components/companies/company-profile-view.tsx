@@ -16,10 +16,10 @@ function SectionCard({
   return (
     <section className="rounded-[28px] bg-white/70 p-6 ring-1 ring-neutral-200/40 shadow-[0_10px_28px_rgba(15,23,42,0.03)] md:p-7">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[16px] font-semibold tracking-[-0.02em] text-[#1f221c]">{title}</h2>
+        <h2 className="type-card-title">{title}</h2>
         <Link
           href={editHref}
-          className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12px] font-medium text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
+          className="type-button inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
         >
           Edit
         </Link>
@@ -32,8 +32,8 @@ function SectionCard({
 function Row({ label, value }: { label: string; value?: string }) {
   return (
     <div className="grid gap-1.5 py-2 md:grid-cols-[180px_minmax(0,1fr)] md:items-start">
-      <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-neutral-400">{label}</p>
-      <p className="text-[14px] text-neutral-700">{value?.trim() ? value : "Missing information"}</p>
+      <p className="type-eyebrow text-neutral-400">{label}</p>
+      <p className="type-body">{value?.trim() ? value : "Missing information"}</p>
     </div>
   );
 }
@@ -67,8 +67,8 @@ export function CompanyProfileView({
           ← Back
         </Link>
 
-        <h1 className="mt-6 text-[34px] font-semibold tracking-[-0.04em] text-[#1f221c]">{heading}</h1>
-        <p className="mt-2 max-w-[640px] text-[14px] leading-[1.5] text-neutral-600">
+        <h1 className="type-page-title mt-6">{heading}</h1>
+        <p className="type-body mt-2 max-w-[640px] text-neutral-600">
           {description}
         </p>
 
@@ -81,7 +81,7 @@ export function CompanyProfileView({
             </div>
             {profile.logoUrl ? (
               <div className="mt-4 rounded-2xl bg-white/60 p-3 ring-1 ring-neutral-200/50">
-                <p className="text-[12px] text-neutral-500">Company logo</p>
+                <p className="type-caption text-neutral-500">Company logo</p>
                 <img src={profile.logoUrl} alt="Company logo" className="mt-2 h-16 w-16 rounded-xl object-cover" />
               </div>
             ) : null}
@@ -115,7 +115,7 @@ export function CompanyProfileView({
             </div>
             {profile.signatureUrl ? (
               <div className="mt-4 rounded-2xl bg-white/60 p-3 ring-1 ring-neutral-200/50">
-                <p className="text-[12px] text-neutral-500">Director signature</p>
+                <p className="type-caption text-neutral-500">Director signature</p>
                 <img
                   src={profile.signatureUrl}
                   alt="Director signature"
@@ -123,7 +123,7 @@ export function CompanyProfileView({
                 />
               </div>
             ) : (
-              <p className="mt-3 text-[13px] text-neutral-500">Missing information</p>
+              <p className="type-caption mt-3 text-neutral-500">Missing information</p>
             )}
           </SectionCard>
 

@@ -16,7 +16,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const BASE_BUTTON_CLASS =
-  "inline-flex h-11 items-center justify-center rounded-full px-[22px] text-[14px] font-semibold text-center transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 disabled:cursor-not-allowed disabled:translate-y-0";
+  "type-button inline-flex h-11 items-center justify-center rounded-full px-[22px] text-center transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 disabled:cursor-not-allowed disabled:translate-y-0";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   default:
@@ -32,11 +32,11 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   icon:
     "inline-flex size-10 items-center justify-center rounded-full bg-[var(--action-primary-soft)] text-[var(--action-text)] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[var(--action-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45",
   subtle:
-    "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-[var(--action-text)] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40",
+    "type-button inline-flex h-8 items-center rounded-lg px-2.5 text-[14px] text-[var(--action-text)] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40",
   chip:
-    "inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-soft)] px-4 text-[13px] font-medium text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
+    "type-button inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-soft)] px-4 text-[14px] text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
   chipActive:
-    "inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-muted)] px-4 text-[13px] font-medium text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
+    "type-button inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-muted)] px-4 text-[14px] text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
 };
 
 export function buttonClassName(variant: ButtonVariant = "default") {

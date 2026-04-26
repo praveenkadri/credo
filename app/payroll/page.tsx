@@ -1,5 +1,5 @@
-import { RunPayrollPageClient } from "@/components/payroll/run-payroll-page-client";
+import { PayrollPage } from "@/components/payroll/payroll-page";
 
-export default function PayrollPage() {
-  return <RunPayrollPageClient />;
+export default function PayrollRoute() {
+  return <PayrollPage />;
 }

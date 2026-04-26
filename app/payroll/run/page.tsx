@@ -1,5 +1,5 @@
-import { RunPayrollPageClient } from "@/components/payroll/run-payroll-page-client";
+import { redirect } from "next/navigation";
 
 export default function RunPayrollPage() {
-  return <RunPayrollPageClient autoOpenWizard />;
+  redirect("/payroll");
 }

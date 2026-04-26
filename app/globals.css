@@ -20,6 +20,9 @@
   --action-primary-muted: rgba(58, 58, 52, 0.1);
   --action-primary-soft: #f1f1ec;
   --action-text: #242421;
+  --text-primary: #1f221c;
+  --text-secondary: #575b55;
+  --text-muted-2: #93988f;
   --shadow-whisper: 0 1px 2px rgba(31, 34, 28, 0.02), 0 8px 24px rgba(31, 34, 28, 0.03);
   --motion-fast: 90ms;
   --motion-base: 160ms;
@@ -53,6 +56,107 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+.type-page-title {
+  font-size: clamp(2rem, 2.4vw, 2.5rem);
+  line-height: 1.16;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.type-section-title {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.type-card-title {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.type-body {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.type-body-strong {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.type-body-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.type-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.type-label {
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.type-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted-2);
+}
+
+.type-button {
+  font-size: 0.875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.type-metric {
+  font-size: 2rem;
+  line-height: 1.12;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.type-metric-small,
+.numeric-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.type-metric-small {
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 500;
 }
 
 @keyframes shellEnter {
@@ -184,6 +288,15 @@ select {
 
 .payroll-step-surface {
   animation: payrollStepIn var(--motion-base) var(--ease-standard) both;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

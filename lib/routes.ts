@@ -1,5 +1,6 @@
 type SearchParamValue = string | number | boolean | null | undefined;
 type SearchParamRecord = Record<string, SearchParamValue>;
+export type EmployeeEditSection = "personal" | "employment" | "identity" | "compensation" | "payroll";
 
 const COMPANY_DETAIL_PATTERN = /^\/companies\/([^/]+)$/;
 const COMPANY_CHILD_PATTERN = /^\/companies\/([^/]+)(?:\/|$)/;
@@ -8,6 +9,9 @@ const COMPANY_PROFILE_PATTERN = /^\/companies\/[^/]+\/profile$/;
 const COMPANY_PROFILE_EDIT_PATTERN = /^\/companies\/[^/]+\/profile\/edit$/;
 const COMPANY_PROFILE_SECTION_EDIT_PATTERN = /^\/companies\/[^/]+\/profile\/[^/]+\/edit$/;
 const COMPANY_CONFIRM_PATTERN = /^\/companies\/[^/]+\/confirm$/;
+const EMPLOYEE_DETAIL_PATTERN = /^\/employees\/([^/]+)$/;
+const EMPLOYEE_CHILD_PATTERN = /^\/employees\/([^/]+)(?:\/|$)/;
+const EMPLOYEE_EDIT_PATTERN = /^\/employees\/[^/]+\/edit$/;
 
 function normalizePathname(pathname: string) {
   if (!pathname || pathname === "/") {
@@ -46,13 +50,16 @@ export const routes = {
   dashboardAlias: "/dashboard",
   companiesAlias: "/companies",
   companiesNew: "/companies/new",
+  employees: "/employees",
+  employeesNew: "/employees/new",
   documents: "/documents",
   payroll: "/payroll",
-  runPayroll: "/payroll/run",
+  runPayroll: "/payroll",
   team: "/team",
   insights: "/insights",
   compliance: "/compliance",
   documentsView: (searchParams?: SearchParamRecord) => withSearch("/documents", searchParams),
+  payrollView: (searchParams?: SearchParamRecord) => withSearch("/payroll", searchParams),
   firstCompanySetup: () => withSearch("/companies/new", { mode: "first" }),
   overviewDeleted: () => withSearch("/app", { deleted: 1 }),
   company: (companyId: string) => `/companies/${companyId}`,
@@ -64,10 +71,19 @@ export const routes = {
   companyProfileSectionEdit: (companyId: string, section: string) => `/companies/${companyId}/profile/${section}/edit`,
   companyConfirm: (companyId: string) => `/companies/${companyId}/confirm`,
   companyDelete: (companyId: string) => `/companies/${companyId}/delete`,
+  employee: (employeeId: string) => `/employees/${employeeId}`,
+  employeeEdit: (employeeId: string) => `/employees/${employeeId}/edit`,
+  employeeEditSection: (employeeId: string, section: EmployeeEditSection) =>
+    withSearch(`/employees/${employeeId}/edit`, { section }),
 } as const;
 
 export function getRouteCompanyId(pathname: string) {
   const match = normalizePathname(pathname).match(COMPANY_CHILD_PATTERN);
+  return match?.[1] ?? null;
+}
+
+export function getRouteEmployeeId(pathname: string) {
+  const match = normalizePathname(pathname).match(EMPLOYEE_CHILD_PATTERN);
   return match?.[1] ?? null;
 }
 
@@ -104,18 +120,50 @@ export function isCompanyConfirmPath(pathname: string) {
   return matches(pathname, COMPANY_CONFIRM_PATTERN);
 }
 
+export function isEmployeeDetailPath(pathname: string) {
+  return matches(pathname, EMPLOYEE_DETAIL_PATTERN);
+}
+
+export function isEmployeeEditPath(pathname: string) {
+  return matches(pathname, EMPLOYEE_EDIT_PATTERN);
+}
+
 export function isFirstCompanySetupPath(pathname: string, mode: string | null | undefined) {
   return normalizePathname(pathname) === routes.companiesNew && mode === "first";
 }
 
 export function shouldHideRightRail(pathname: string) {
   return (
-    isPayrollPath(pathname) ||
     normalizePathname(pathname) === routes.companiesNew ||
+    normalizePathname(pathname) === routes.employees ||
+    normalizePathname(pathname) === routes.employeesNew ||
     isCompanyDeletePath(pathname) ||
     isCompanyProfilePath(pathname) ||
     isCompanyProfileEditPath(pathname) ||
     isCompanyProfileSectionEditPath(pathname) ||
-    isCompanyConfirmPath(pathname)
+    isCompanyConfirmPath(pathname) ||
+    isEmployeeEditPath(pathname)
   );
+}
+
+export function shouldHideSidebar(pathname: string) {
+  return normalizePathname(pathname) === routes.employeesNew || isEmployeeEditPath(pathname);
+}
+
+export function isCompanyFormPath(pathname: string) {
+  const normalized = normalizePathname(pathname);
+  return (
+    normalized === routes.companiesNew ||
+    isCompanyProfileEditPath(normalized) ||
+    isCompanyProfileSectionEditPath(normalized)
+  );
+}
+
+export function isEmployeeFormPath(pathname: string) {
+  const normalized = normalizePathname(pathname);
+  return normalized === routes.employeesNew || isEmployeeEditPath(normalized);
+}
+
+export function shouldUseFocusedFormChrome(pathname: string) {
+  return isCompanyFormPath(pathname) || isEmployeeFormPath(pathname);
 }

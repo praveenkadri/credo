@@ -62,6 +62,17 @@ function TeamIcon() {
   );
 }
 
+function EmployeesIcon() {
+  return (
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
+      <circle cx="6.6" cy="6.4" r="1.8" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
+      <circle cx="11.7" cy="7.2" r="1.45" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
+      <path d="M3.9 13.4C4.8 11.6 6 10.8 7.6 10.8C9.2 10.8 10.5 11.6 11.3 13.4" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
+      <path d="M10.4 13.4C10.8 12.4 11.6 11.9 12.7 11.9C13.5 11.9 14.2 12.3 14.7 13.4" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function InsightsIcon() {
   return (
     <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
@@ -89,6 +100,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: OverviewIcon,
   },
   { label: "Team", href: routes.team, isActive: (pathname) => pathname.startsWith(routes.team), icon: TeamIcon },
+  {
+    label: "Employees",
+    href: routes.employees,
+    isActive: (pathname) => pathname.startsWith(routes.employees),
+    icon: EmployeesIcon,
+  },
   {
     label: "Payroll",
     href: routes.payroll,
@@ -162,6 +179,7 @@ function NavRow({
         <span
           className={[
             "block whitespace-nowrap text-sm font-medium leading-[1.35] tracking-[-0.02em] transition-[opacity,transform,color] duration-[170ms] ease-out motion-reduce:transition-none",
+            "type-button",
             active ? "text-[#1f221c]" : "text-[#6e736b] group-hover:text-[#1f221c]",
             collapsed ? "translate-x-1 opacity-0" : "translate-x-0 opacity-100",
           ].join(" ")}
@@ -185,20 +203,23 @@ function NavRow({
 type SidebarProps = {
   collapsed: boolean;
   onToggle: () => void;
+  lockedCollapsed?: boolean;
 };
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, lockedCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const c = useContent();
   const nav = c.navigation;
+  const resolvedCollapsed = lockedCollapsed ? true : collapsed;
 
   const navItems = [
     { ...NAV_ITEMS[0], label: nav.overview },
     { ...NAV_ITEMS[1], label: nav.team },
-    { ...NAV_ITEMS[2], label: nav.payroll },
-    { ...NAV_ITEMS[3], label: nav.documents },
-    { ...NAV_ITEMS[4], label: nav.insights },
-    { ...NAV_ITEMS[5], label: nav.compliance },
+    { ...NAV_ITEMS[2], label: nav.employees },
+    { ...NAV_ITEMS[3], label: nav.payroll },
+    { ...NAV_ITEMS[4], label: nav.documents },
+    { ...NAV_ITEMS[5], label: nav.insights },
+    { ...NAV_ITEMS[6], label: nav.compliance },
   ];
 
   return (
@@ -206,36 +227,42 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       className={[
         "relative hidden h-full shrink-0 bg-transparent md:flex md:flex-col",
         "transition-[width] duration-[240ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
-        collapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
+        resolvedCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
       ].join(" ")}
       aria-label="Sidebar"
     >
       <div className="flex h-full flex-col px-3 py-3">
-        <div className={collapsed ? "flex justify-center" : "flex items-center justify-between"}>
-          {!collapsed ? <CredoBrandMark className="pl-1" /> : null}
+        <div className={resolvedCollapsed ? "flex justify-center" : "flex items-center justify-between"}>
+          {lockedCollapsed ? (
+            <span className="text-[20px] font-semibold tracking-[-0.05em] text-[#1f221c]">C</span>
+          ) : !resolvedCollapsed ? (
+            <CredoBrandMark className="pl-1" />
+          ) : null}
 
-          <button
-            type="button"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={onToggle}
-            className="inline-flex size-10 cursor-pointer items-center justify-center rounded-xl bg-transparent text-[#6e736b] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 5H12M4 8H12M4 11H12" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-            </svg>
-          </button>
+          {!lockedCollapsed ? (
+            <button
+              type="button"
+              aria-label={resolvedCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              onClick={onToggle}
+              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-xl bg-transparent text-[#6e736b] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 5H12M4 8H12M4 11H12" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+              </svg>
+            </button>
+          ) : null}
         </div>
 
-        <div className={collapsed ? "mt-4 flex flex-col gap-1.5" : "mt-5 flex flex-col gap-1"}>
+        <div className={resolvedCollapsed ? "mt-4 flex flex-col gap-1.5" : "mt-5 flex flex-col gap-1"}>
           {navItems.map((item) => (
-            <NavRow key={item.label} item={item} collapsed={collapsed} pathname={pathname} />
+            <NavRow key={item.label} item={item} collapsed={resolvedCollapsed} pathname={pathname} />
           ))}
         </div>
 
         <div className="flex-1" />
 
-        <div className={collapsed ? "pt-3 flex justify-center" : "pt-4"}>
-          {collapsed ? (
+        <div className={resolvedCollapsed ? "pt-3 flex justify-center" : "pt-4"}>
+          {resolvedCollapsed ? (
             <Tooltip label="Credo workspace">
               <button
                 type="button"
@@ -252,10 +279,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             >
               <Avatar initials="C" />
               <div className="min-w-0">
-                <div className="truncate text-[13.5px] font-medium tracking-[-0.016em]">
+                <div className="type-button truncate text-[#1f221c]">
                   Credo workspace
                 </div>
-                <div className="truncate text-[12.5px] text-[#93988f]">
+                <div className="type-caption truncate">
                   Operations
                 </div>
               </div>

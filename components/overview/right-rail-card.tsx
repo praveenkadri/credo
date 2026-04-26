@@ -22,7 +22,7 @@ export function RightRailCard({
       className={cn(
         surfaceClass("rightRailCard"),
         "p-6",
-        "[&_h2]:text-[12px] [&_h2]:text-neutral-600",
+        "[&_h2]:type-caption [&_h2]:text-neutral-600",
         className
       )}
       tone={tone}
