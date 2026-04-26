@@ -18,7 +18,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full">
-      <body suppressHydrationWarning className="h-full overflow-hidden">
+      <body suppressHydrationWarning className="h-full">
         <AppShell initialSidebarCollapsed={initialSidebarCollapsed}>{children}</AppShell>
       </body>
     </html>

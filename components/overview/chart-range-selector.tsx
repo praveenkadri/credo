@@ -21,7 +21,7 @@ export function ChartRangeSelector({
             className={cn(
               "inline-flex h-8 items-center rounded-xl px-3 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
               active
-                ? "bg-neutral-100 text-neutral-900 shadow-[inset_0_0_0_1px_rgba(31,34,28,0.05)]"
+                ? "bg-[var(--action-primary-muted)] text-[var(--action-text)] shadow-[inset_0_0_0_1px_rgba(31,34,28,0.05)]"
                 : "text-[#6e736b] hover:bg-neutral-100/70 hover:text-neutral-900"
             )}
           >

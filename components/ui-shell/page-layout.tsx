@@ -1,14 +1,20 @@
 import { APP_LAYOUT } from "@/components/ui-shell/layout-constants";
 import { cn } from "@/lib/utils";
 
-export function PageFrame({ children }: { children: React.ReactNode }) {
+export function PageFrame({
+  children,
+  withRail = true,
+}: {
+  children: React.ReactNode;
+  withRail?: boolean;
+}) {
   return (
     <div
       className={cn(
-        APP_LAYOUT.topGridOffset,
-        "grid w-full items-start",
+        "w-full items-start",
+        APP_LAYOUT.containerMaxWidth,
         APP_LAYOUT.mainRailGap,
-        `xl:grid-cols-[minmax(0,1fr)_${APP_LAYOUT.rightRailWidth}]`
+        withRail ? APP_LAYOUT.withRailColumns : "block"
       )}
     >
       {children}
@@ -17,9 +23,9 @@ export function PageFrame({ children }: { children: React.ReactNode }) {
 }
 
 export function PageMain({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <main className={cn("min-w-0 px-0 md:px-0", className)}>{children}</main>;
+  return <main className={cn(APP_LAYOUT.mainColumnWidthClass, className)}>{children}</main>;
 }
 
 export function PageRail({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <aside className={APP_LAYOUT.rightRailWidthClass}>{children}</aside>;
 }

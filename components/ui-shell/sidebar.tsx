@@ -1,12 +1,18 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/ui-primitives/avatar";
 import { Tooltip } from "@/components/ui-primitives/tooltip";
 import { SIDEBAR_WIDTH } from "@/components/ui-shell/layout-constants";
+import { CredoBrandMark } from "@/components/ui-shell/credo-brand-mark";
+import { isOverviewPath, isPayrollPath, routes } from "@/lib/routes";
+import { useContent } from "@/lib/useContent";
 
 type NavItem = {
   label: string;
-  active?: boolean;
+  href: string;
+  isActive: (pathname: string) => boolean;
   icon: () => JSX.Element;
 };
 
@@ -35,6 +41,16 @@ function PayrollIcon() {
   );
 }
 
+function DocumentsIcon() {
+  return (
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
+      <path d="M5 3.4H11L13 5.5V13.1C13 13.8 12.4 14.4 11.7 14.4H5.3C4.6 14.4 4 13.8 4 13.1V4.7C4 4 4.6 3.4 5.3 3.4H5Z" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.8 3.5V5.8H13" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.4 8.1H10.5M6.4 10.1H10.5M6.4 12.1H9.1" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function TeamIcon() {
   return (
     <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
@@ -42,15 +58,6 @@ function TeamIcon() {
       <circle cx="11.8" cy="7.8" r="1.55" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
       <path d="M4.2 13.6C5 11.9 6.2 11 7.9 11C9.5 11 10.8 11.8 11.7 13.6" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
       <path d="M10.3 13.6C10.8 12.5 11.6 11.9 12.7 11.9C13.6 11.9 14.3 12.4 14.8 13.6" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CompaniesIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <rect x="4.3" y="3.4" width="9.4" height="11.2" rx="1.2" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <path d="M6.7 6.2H7.7M10.3 6.2H11.3M6.7 8.8H7.7M10.3 8.8H11.3M6.7 11.4H7.7M10.3 11.4H11.3" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
     </svg>
   );
 }
@@ -75,26 +82,53 @@ function ComplianceIcon() {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Overview", active: true, icon: OverviewIcon },
-  { label: "Team", icon: TeamIcon },
-  { label: "Companies", icon: CompaniesIcon },
-  { label: "Payroll", icon: PayrollIcon },
-  { label: "Insights", icon: InsightsIcon },
-  { label: "Compliance", icon: ComplianceIcon },
+  {
+    label: "Overview",
+    href: routes.overview,
+    isActive: isOverviewPath,
+    icon: OverviewIcon,
+  },
+  { label: "Team", href: routes.team, isActive: (pathname) => pathname.startsWith(routes.team), icon: TeamIcon },
+  {
+    label: "Payroll",
+    href: routes.payroll,
+    isActive: isPayrollPath,
+    icon: PayrollIcon,
+  },
+  {
+    label: "Documents",
+    href: routes.documents,
+    isActive: (pathname) => pathname.startsWith(routes.documents),
+    icon: DocumentsIcon,
+  },
+  {
+    label: "Insights",
+    href: routes.insights,
+    isActive: (pathname) => pathname.startsWith(routes.insights),
+    icon: InsightsIcon,
+  },
+  {
+    label: "Compliance",
+    href: routes.compliance,
+    isActive: (pathname) => pathname.startsWith(routes.compliance),
+    icon: ComplianceIcon,
+  },
 ];
 
 function NavRow({
   item,
   collapsed,
+  pathname,
 }: {
   item: NavItem;
   collapsed: boolean;
+  pathname: string;
 }) {
-  const active = Boolean(item.active);
+  const active = item.isActive(pathname);
 
   const button = (
-    <button
-      type="button"
+    <Link
+      href={item.href}
       aria-label={collapsed ? item.label : undefined}
       className={[
         "group relative flex cursor-pointer items-center transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
@@ -136,7 +170,7 @@ function NavRow({
           {item.label}
         </span>
       </span>
-    </button>
+    </Link>
   );
 
   if (!collapsed) return button;
@@ -154,6 +188,18 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const pathname = usePathname();
+  const c = useContent();
+  const nav = c.navigation;
+
+  const navItems = [
+    { ...NAV_ITEMS[0], label: nav.overview },
+    { ...NAV_ITEMS[1], label: nav.team },
+    { ...NAV_ITEMS[2], label: nav.payroll },
+    { ...NAV_ITEMS[3], label: nav.documents },
+    { ...NAV_ITEMS[4], label: nav.insights },
+    { ...NAV_ITEMS[5], label: nav.compliance },
+  ];
 
   return (
     <aside
@@ -166,11 +212,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       <div className="flex h-full flex-col px-3 py-3">
         <div className={collapsed ? "flex justify-center" : "flex items-center justify-between"}>
-          {!collapsed && (
-            <div className="pl-1 text-[18px] font-semibold tracking-[-0.038em] text-[#1f221c]">
-              Credo
-            </div>
-          )}
+          {!collapsed ? <CredoBrandMark className="pl-1" /> : null}
 
           <button
             type="button"
@@ -185,8 +227,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
 
         <div className={collapsed ? "mt-4 flex flex-col gap-1.5" : "mt-5 flex flex-col gap-1"}>
-          {NAV_ITEMS.map((item) => (
-            <NavRow key={item.label} item={item} collapsed={collapsed} />
+          {navItems.map((item) => (
+            <NavRow key={item.label} item={item} collapsed={collapsed} pathname={pathname} />
           ))}
         </div>
 
@@ -198,7 +240,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <button
                 type="button"
                 aria-label="Credo workspace"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#1f221c] text-[12.5px] font-medium text-white transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#242421] text-[12.5px] font-medium text-white transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]"
               >
                 C
               </button>

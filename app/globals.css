@@ -15,10 +15,19 @@
   --text-faint: #93988f;
   --interactive-hover: rgba(31, 34, 28, 0.035);
   --interactive-active: rgba(31, 34, 28, 0.06);
+  --action-primary: #3a3a34;
+  --action-primary-hover: #4a4a43;
+  --action-primary-muted: rgba(58, 58, 52, 0.1);
+  --action-primary-soft: #f1f1ec;
+  --action-text: #242421;
   --shadow-whisper: 0 1px 2px rgba(31, 34, 28, 0.02), 0 8px 24px rgba(31, 34, 28, 0.03);
-  --motion-fast: 120ms;
-  --motion-base: 180ms;
+  --motion-fast: 90ms;
+  --motion-base: 160ms;
   --motion-slow: 240ms;
+  --motion-section-enter: 220ms;
+  --motion-toast-in: 180ms;
+  --motion-toast-out: 160ms;
+  --motion-skeleton: 1200ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,7 +69,7 @@ select {
 .shell-enter {
   opacity: 0;
   transform: translateY(6px);
-  animation: shellEnter 220ms var(--ease-out-soft) forwards;
+  animation: shellEnter var(--motion-section-enter) var(--ease-standard) forwards;
 }
 
 .shell-enter-delay-1 {
@@ -94,10 +103,106 @@ select {
   animation: bannerEnter var(--motion-base) var(--ease-out-soft) both;
 }
 
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 0.98;
+  }
+}
+
+.skeleton-block {
+  animation: skeletonPulse var(--motion-skeleton) var(--ease-standard) infinite;
+}
+
+.state-transition-enter {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: shellEnter var(--motion-section-enter) var(--ease-standard) forwards;
+}
+
+@keyframes payrollModalOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes payrollModalSurfaceIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes payrollStepIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.payroll-modal-overlay {
+  animation: payrollModalOverlayIn var(--motion-base) var(--ease-out-soft) both;
+}
+
+.payroll-modal-surface {
+  animation: payrollModalSurfaceIn var(--motion-slow) var(--ease-out-soft) both;
+}
+
+.payroll-step-surface {
+  animation: payrollStepIn var(--motion-base) var(--ease-standard) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .skeleton-block {
+    animation: none !important;
+    opacity: 0.85;
+  }
+
+  .state-transition-enter,
+  .shell-enter,
+  .banner-enter,
+  .payroll-modal-surface,
+  .payroll-step-surface {
+    transform: none !important;
   }
 }

@@ -1,4 +1,5 @@
 import { statePillToneMap } from "@/components/overview/overview-data";
+import { routes } from "@/lib/routes";
 
 export type CompanyHealth = "Healthy" | "Needs review" | "Funding due";
 
@@ -36,6 +37,7 @@ export type CompanyQuickAction = {
   id: string;
   label: string;
   icon: "plus" | "run";
+  href?: string;
 };
 
 export type RightRailAction = {
@@ -54,7 +56,7 @@ const defaultCompanyDetail: CompanyDetail = {
   id: "aster-health",
   name: "Aster Health Group",
   initials: "AH",
-  avatarTone: "bg-neutral-50/60",
+  avatarTone: "bg-neutral-100/70",
   status: "Healthy",
   statusPillTone: statePillToneMap.Healthy,
   subtitle: "Payroll account · 94 employees",
@@ -129,7 +131,7 @@ const defaultActivityGroups: CompanyActivityGroupData[] = [
 
 const defaultQuickActions: CompanyQuickAction[] = [
   { id: "add-invoice", label: "Add invoice", icon: "plus" },
-  { id: "run-payroll", label: "Run payroll", icon: "run" },
+  { id: "run-payroll", label: "Run payroll", icon: "run", href: routes.runPayroll },
 ];
 
 const defaultRightRailActions: RightRailAction[] = [
@@ -167,6 +169,5 @@ export function getCompanyDetailPageData(id: string) {
     quickActions: defaultQuickActions,
     rightRailActions: defaultRightRailActions,
     directDepositFields: defaultDirectDepositFields,
-    companyInfo: ["Company profile", "Payroll setup", "Tax setup"],
   };
 }

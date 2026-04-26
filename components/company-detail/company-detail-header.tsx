@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 import type { CompanyDetail } from "@/components/company-detail/company-detail-data";
 
 export function CompanyDetailHeader({ company }: { company: CompanyDetail }) {
+  const showStatusPill = company.status !== "Healthy";
+
   return (
     <header className="shell-enter">
       <div className="flex items-start gap-4">
@@ -25,14 +27,16 @@ export function CompanyDetailHeader({ company }: { company: CompanyDetail }) {
               <span className="text-[18px] text-neutral-500">⌄</span>
             </button>
 
-            <span
-              className={cn(
-                "inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ring-1",
-                company.statusPillTone
-              )}
-            >
-              {company.status}
-            </span>
+            {showStatusPill ? (
+              <span
+                className={cn(
+                  "inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ring-1",
+                  company.statusPillTone
+                )}
+              >
+                {company.status}
+              </span>
+            ) : null}
           </div>
 
           <p className="mt-2 text-[13px] text-neutral-600">{company.subtitle}</p>

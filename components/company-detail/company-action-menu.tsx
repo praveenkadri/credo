@@ -6,7 +6,7 @@ import type { RightRailAction } from "@/components/company-detail/company-detail
 
 export function CompanyActionMenu({ actions }: { actions: RightRailAction[] }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {actions.map((action) => (
         <button
           key={action.id}

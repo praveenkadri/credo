@@ -1,19 +1,47 @@
 import * as React from "react";
 
-type ButtonVariant = "default" | "icon" | "subtle";
+type ButtonVariant =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "outline"
+  | "chip"
+  | "chipActive"
+  | "icon"
+  | "subtle";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
 };
 
+const BASE_BUTTON_CLASS =
+  "inline-flex h-11 items-center justify-center rounded-full px-[22px] text-[14px] font-semibold text-center transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 disabled:cursor-not-allowed disabled:translate-y-0";
+
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   default:
-    "inline-flex h-10 items-center gap-2 rounded-xl bg-[#fafaf7] px-3 text-sm font-medium text-[#575b55]",
+    `${BASE_BUTTON_CLASS} bg-[var(--action-primary-soft)] text-[var(--action-text)] hover:bg-white hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 disabled:bg-neutral-200/70 disabled:text-neutral-500`,
+  primary:
+    `${BASE_BUTTON_CLASS} bg-[var(--action-primary)] text-white hover:bg-[var(--action-primary-hover)] hover:-translate-y-[1px] active:translate-y-0 disabled:bg-neutral-300 disabled:text-neutral-600`,
+  secondary:
+    `${BASE_BUTTON_CLASS} bg-[var(--action-primary-soft)] text-[var(--action-text)] hover:bg-white hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 disabled:bg-neutral-200/70 disabled:text-neutral-500`,
+  ghost:
+    `${BASE_BUTTON_CLASS} bg-transparent text-[var(--action-text)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 disabled:text-neutral-400`,
+  outline:
+    `${BASE_BUTTON_CLASS} bg-transparent text-[var(--action-text)] ring-1 ring-neutral-200/65 hover:bg-[var(--action-primary-soft)] hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 disabled:text-neutral-400 disabled:ring-neutral-200/45`,
   icon:
-    "inline-flex size-10 items-center justify-center rounded-xl bg-[#fafaf7] text-[#6e736b]",
+    "inline-flex size-10 items-center justify-center rounded-full bg-[var(--action-primary-soft)] text-[var(--action-text)] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[var(--action-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45",
   subtle:
-    "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-[#6e736b]",
+    "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-[var(--action-text)] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40",
+  chip:
+    "inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-soft)] px-4 text-[13px] font-medium text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
+  chipActive:
+    "inline-flex h-9 items-center justify-center rounded-full bg-[var(--action-primary-muted)] px-4 text-[13px] font-medium text-[var(--action-text)] transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[var(--action-primary-muted)] hover:text-[var(--action-text)] hover:-translate-y-[1px] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:translate-y-0",
 };
+
+export function buttonClassName(variant: ButtonVariant = "default") {
+  return VARIANT_CLASS[variant];
+}
 
 export function Button({
   className,
@@ -26,7 +54,6 @@ export function Button({
       type={type}
       className={[
         VARIANT_CLASS[variant],
-        "transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/60 hover:text-neutral-900 active:bg-[#eef0ea] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40",
         className,
       ]
         .filter(Boolean)

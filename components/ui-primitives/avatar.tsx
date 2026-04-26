@@ -9,7 +9,7 @@ export function Avatar({ initials, compact = false, className, ...props }: Avata
   return (
     <div
       className={[
-        "flex items-center justify-center rounded-full bg-[#1f221c] font-medium text-white",
+        "flex items-center justify-center rounded-full bg-[#242421] font-medium text-white",
         compact ? "size-7 text-[11px]" : "size-9 text-[12.5px]",
         className,
       ]
