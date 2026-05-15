@@ -1,25 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useEmployeesStore } from "@/hooks/useEmployeesStore";
 import {
-  employeeCompensationSummary,
-  employeeInitials,
   formatDateLabel,
+  type EmployeeRecord,
 } from "@/lib/data/employees";
 import { routes } from "@/lib/routes";
 import { useContent } from "@/lib/useContent";
-import { buttonClassName } from "@/components/ui-primitives/button";
 import { SoftNotice } from "@/components/system/SoftNotice";
 
-export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
+const COMPANY_LABELS: Record<string, string> = {
+  northline: "Northline Foods",
+  willow: "Willow Creative",
+  harbor: "Harbor Logistics",
+};
+
+export function EmployeeProfilePage({ employee }: { employee: EmployeeRecord | null }) {
   const c = useContent();
   const view = c.employee;
-  const router = useRouter();
-  const { employees, deactivateEmployee } = useEmployeesStore();
-  const employee = useMemo(() => employees.find((item) => item.id === employeeId) ?? null, [employeeId, employees]);
 
   if (!employee) {
     return (
@@ -31,134 +29,100 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
     );
   }
 
+  const profileState = getEmployeeProfileState(employee);
+  const statusLabel = employee.status === "active" ? view.active : view.inactive;
+  const primaryLine = employee.role?.trim() || (employee.status === "active" ? "Active employee" : statusLabel);
+  const supportLine = getProfileSupportLine(employee, profileState);
+  const companyLabel = employee.companyId ? COMPANY_LABELS[employee.companyId] ?? employee.companyId : "";
+
   return (
     <div className="w-full pb-12">
-      <header className="shell-enter">
-        <Link href={routes.employees} className={buttonClassName("secondary")}>
-          ← {view.listTitle}
-        </Link>
-
-        <div className="mt-6 flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-          <div className="flex items-start gap-4">
-            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f1f1ec] text-[16px] font-medium tracking-[0.02em] text-[var(--action-text)]">
-              {employeeInitials(employee.name)}
+      <header className="shell-enter pb-5 pt-3 md:pb-7 md:pt-5">
+        <div className="max-w-[720px]">
+          <p className="text-[12px] font-medium leading-tight text-[var(--credo-muted-strong)]">Employee profile</p>
+          <p className="mt-4 text-[38px] font-semibold leading-[1.04] tracking-[-0.022em] text-[var(--credo-ink)] md:text-[46px]">
+            {primaryLine}
+          </p>
+          <p className="mt-4 text-[15px] font-medium leading-[1.45] text-[var(--credo-muted-strong)]">
+            {supportLine}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] font-medium leading-none text-[var(--credo-muted)]">
+            <span className="rounded-full bg-[var(--credo-bronze-soft)] px-3 py-1.5 text-[var(--credo-green-950)]">
+              {profileState.completed} of {profileState.total} complete
             </span>
-
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="type-page-title">{employee.name}</h1>
-                <span className="type-caption inline-flex h-7 items-center rounded-full bg-[var(--action-primary-muted)] px-3 font-medium text-[var(--action-text)]">
-                  {employee.status === "active" ? view.active : view.inactive}
-                </span>
-              </div>
-              <p className="type-body mt-2 text-neutral-600">
-                {[employee.role, employee.email].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                deactivateEmployee(employee.id);
-                router.refresh();
-              }}
-              className={buttonClassName("outline")}
-            >
-              {view.deactivate}
-            </button>
+            {employee.startDate ? (
+              <>
+                <span className="hidden h-1 w-1 rounded-full bg-[var(--credo-taupe-strong)] sm:inline-block" aria-hidden="true" />
+                <span>Started {formatDateLabel(employee.startDate)}</span>
+              </>
+            ) : null}
+            <span className="hidden h-1 w-1 rounded-full bg-[var(--credo-taupe-strong)] sm:inline-block" aria-hidden="true" />
+            <span className="text-[var(--credo-green-800)]">{statusLabel}</span>
           </div>
         </div>
       </header>
 
-      <div className="mt-8 space-y-8">
-        <EmployeeSection title={view.employmentDetails} editHref={routes.employeeEditSection(employee.id, "employment")}>
-          <SectionGrid
-            items={[
-              { label: view.role, value: employee.role || c.common.noDataFallback },
-              { label: view.startDate, value: formatDateLabel(employee.startDate) },
-              { label: view.employmentType, value: employmentTypeLabel(view, employee.employmentType) },
-              { label: view.department, value: employee.department || c.common.noDataFallback },
-              { label: view.workLocation, value: employee.workLocation || c.common.noDataFallback },
-            ]}
+      <div className="mt-3 space-y-9">
+        <EmployeeSection title="Recent activity" delay="shell-enter-delay-1">
+          {employee.activity.lastPaidDate ? (
+            <div className="overflow-hidden rounded-[22px] bg-[var(--credo-surface-warm)] shadow-[0_1px_0_rgba(255,255,255,0.74)_inset] ring-1 ring-[rgba(91,77,58,0.1)]">
+              <InfoRow label="Last payroll activity" value={formatDateLabel(employee.activity.lastPaidDate)} />
+            </div>
+          ) : (
+            <CompactEmptyState
+              title="No recent activity yet"
+              copy="Employee updates and payroll changes will appear here."
+            />
+          )}
+        </EmployeeSection>
+
+        <EmployeeSection title="Payroll history" delay="shell-enter-delay-2">
+          {employee.activity.lastPaidDate ? (
+            <div className="overflow-hidden rounded-[22px] bg-[var(--credo-surface-warm)] shadow-[0_1px_0_rgba(255,255,255,0.74)_inset] ring-1 ring-[rgba(91,77,58,0.1)]">
+              <InfoRow label={view.lastPaidDate} value={formatDateLabel(employee.activity.lastPaidDate)} />
+            </div>
+          ) : (
+            <CompactEmptyState
+              title="No payroll runs yet"
+              copy="Payroll runs for this employee will appear here."
+            />
+          )}
+        </EmployeeSection>
+
+        <EmployeeSection title="Documents" delay="shell-enter-delay-2">
+          <CompactEmptyState
+            title="No documents yet"
+            copy="Generated pay stubs and employee documents will appear here."
           />
         </EmployeeSection>
 
-        <EmployeeSection title={view.personalDetails} editHref={routes.employeeEditSection(employee.id, "personal")}>
-          <SectionGrid
-            items={[
-              { label: view.fullName, value: employee.name },
-              { label: view.email, value: employee.email || c.common.noDataFallback },
-              { label: view.phone, value: employee.phone || c.common.noDataFallback },
-              { label: view.employeeAddress, value: formatAddress(employee) || c.common.noDataFallback },
-            ]}
-          />
-        </EmployeeSection>
-
-        <EmployeeSection title={view.taxAndIdentity} editHref={routes.employeeEditSection(employee.id, "identity")}>
-          <SectionGrid
-            items={[
-              { label: view.sin, value: maskSin(employee.identity.sin) || c.common.noDataFallback },
-              { label: view.sinExpiryDate, value: employee.identity.sinExpiryDate ? formatDateLabel(employee.identity.sinExpiryDate) : c.common.noDataFallback },
-              { label: view.dateOfBirth, value: employee.identity.dateOfBirth ? formatDateLabel(employee.identity.dateOfBirth) : c.common.noDataFallback },
-              { label: view.taxProvince, value: employee.identity.taxProvince || c.common.noDataFallback },
-            ]}
-          />
-        </EmployeeSection>
-
-        <EmployeeSection title={view.compensation} editHref={routes.employeeEditSection(employee.id, "compensation")}>
-          <SectionGrid
-            items={[
-              { label: view.rateType, value: rateTypeLabel(view, employee.compensation.rateType) },
-              { label: view.rateAmount, value: employeeCompensationSummary(employee) },
-              { label: view.paySchedule, value: payScheduleLabel(view, employee.compensation.paySchedule) },
-            ]}
-          />
-        </EmployeeSection>
-
-        <EmployeeSection title={view.workSchedule} editHref={routes.employeeEditSection(employee.id, "compensation")}>
-          <SectionGrid
-            items={[
-              { label: view.hoursPerDay, value: String(employee.workSchedule.hoursPerDay) },
-              { label: view.hoursPerWeek, value: String(employee.workSchedule.hoursPerWeek) },
-              { label: view.workingDays, value: employee.workSchedule.workingDays.join(", ") },
-              {
-                label: view.overrides,
-                value: employee.workSchedule.overrides.length ? employee.workSchedule.overrides.join(", ") : c.common.noDataFallback,
-              },
-            ]}
-          />
-        </EmployeeSection>
-
-        <EmployeeSection title={view.payrollSettings} editHref={routes.employeeEditSection(employee.id, "payroll")}>
-          <SectionGrid
-            items={[
-              { label: view.eligibleForPayroll, value: employee.payrollSettings.eligibleForPayroll ? view.active : view.inactive },
-              { label: view.defaultInPayroll, value: employee.payrollSettings.defaultInPayroll ? view.active : view.inactive },
-              { label: view.paymentMethod, value: employee.payrollSettings.paymentMethod || view.paymentMethodPlaceholder },
-              { label: view.taxProfile, value: employee.payrollSettings.taxProfile },
-            ]}
-          />
-        </EmployeeSection>
-
-        <EmployeeSection title={view.activity}>
-          <SectionGrid
-            items={[
-              {
-                label: view.lastPaidDate,
-                value: employee.activity.lastPaidDate ? formatDateLabel(employee.activity.lastPaidDate) : c.common.noDataFallback,
-              },
-            ]}
-          />
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href={routes.documents} className={buttonClassName("secondary")}>
-              {view.activityLinks.documents}
-            </Link>
-            <span className="inline-flex h-11 items-center rounded-full bg-[var(--action-primary-soft)] px-[22px] text-[14px] font-semibold text-[var(--action-text)]">
-              {view.activityLinks.payrollHistory}
-            </span>
-          </div>
+        <EmployeeSection title={view.employmentDetails} delay="shell-enter-delay-2">
+          {hasEmploymentDetails(employee) ? (
+            <div className="overflow-hidden rounded-[22px] bg-[var(--credo-surface-warm)] shadow-[0_1px_0_rgba(255,255,255,0.74)_inset] ring-1 ring-[rgba(91,77,58,0.1)]">
+              {companyLabel ? (
+                <Link
+                  href={routes.company(employee.companyId ?? "")}
+                  className="group flex min-h-[62px] items-center justify-between gap-4 px-5 py-3.5 transition-colors duration-[180ms] hover:bg-[rgba(184,135,79,0.08)]"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-[12px] leading-tight text-[var(--credo-muted)]">Company</span>
+                    <span className="mt-1 block truncate text-[13px] font-medium text-[var(--credo-ink)]">{companyLabel}</span>
+                  </span>
+                  <ArrowIcon className="size-4 shrink-0 text-[var(--credo-bronze-700)] transition-colors group-hover:text-[var(--credo-green-800)]" />
+                </Link>
+              ) : null}
+              <InfoRow label={view.role} value={employee.role || c.common.noDataFallback} divided={Boolean(companyLabel)} />
+              <InfoRow label={view.employmentType} value={employmentTypeLabel(view, employee.employmentType)} divided />
+              <InfoRow label={view.department} value={employee.department || c.common.noDataFallback} divided />
+              <InfoRow label={view.workLocation} value={employee.workLocation || c.common.noDataFallback} divided />
+              <InfoRow label={view.workSchedule} value={formatWorkSchedule(employee)} divided />
+            </div>
+          ) : (
+            <CompactEmptyState
+              title="No employment details yet"
+              copy="Employment information connected to this employee will appear here."
+            />
+          )}
         </EmployeeSection>
       </div>
     </div>
@@ -168,52 +132,34 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
 function EmployeeSection({
   title,
   children,
-  editHref,
+  delay,
 }: {
   title: string;
   children: React.ReactNode;
-  editHref?: string;
+  delay?: string;
 }) {
   return (
-    <section className="shell-enter rounded-[28px] bg-white/50 p-6 ring-1 ring-neutral-200/45 backdrop-blur-sm">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="type-card-title">{title}</h2>
-        {editHref ? <EditSectionLink href={editHref} title={title} /> : null}
-      </div>
-      <div className="mt-5">{children}</div>
+    <section className={["shell-enter", delay, "mt-3"].filter(Boolean).join(" ")}>
+      <h2 className="mb-4 text-[18px] font-semibold leading-tight tracking-[-0.01em] text-[var(--credo-ink)]">{title}</h2>
+      {children}
     </section>
   );
 }
 
-function EditSectionLink({ href, title }: { href: string; title: string }) {
+function CompactEmptyState({ title, copy }: { title: string; copy: string }) {
   return (
-    <Link
-      href={href}
-      aria-label={`Edit ${title}`}
-      className="inline-flex size-10 items-center justify-center rounded-full bg-white/75 text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white hover:text-[#1f221c]"
-    >
-      <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-        <path
-          d="M10.9 3.2L12.8 5.1M4.1 11.9L5.9 11.5L12.1 5.3C12.6 4.8 12.6 4 12.1 3.5L11.3 2.7C10.8 2.2 10 2.2 9.5 2.7L3.3 8.9L2.9 10.7L2.6 12.4L4.1 11.9Z"
-          stroke="currentColor"
-          strokeWidth="1.35"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </Link>
+    <div className="rounded-[22px] bg-[var(--credo-surface-warm)] px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.72)_inset] ring-1 ring-[rgba(91,77,58,0.1)]">
+      <h3 className="text-[15px] font-semibold leading-tight text-[var(--credo-ink)]">{title}</h3>
+      <p className="mt-1.5 max-w-[520px] text-[13px] leading-[1.45] text-[var(--credo-muted)]">{copy}</p>
+    </div>
   );
 }
 
-function SectionGrid({ items }: { items: Array<{ label: string; value: string }> }) {
+function InfoRow({ label, value, divided = false }: { label: string; value: string; divided?: boolean }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
-      {items.map((item) => (
-        <div key={item.label}>
-          <p className="type-eyebrow text-neutral-400">{item.label}</p>
-          <p className="type-body-strong numeric-tabular mt-2 text-[#1f221c]">{item.value}</p>
-        </div>
-      ))}
+    <div className={["flex min-h-[58px] items-center justify-between gap-4 px-5 py-3.5", divided ? "border-t border-[rgba(91,77,58,0.1)]" : ""].join(" ")}>
+      <span className="text-[12px] leading-tight text-[var(--credo-muted)]">{label}</span>
+      <span className="min-w-0 max-w-[62%] truncate text-right text-[13px] font-medium leading-tight text-[var(--credo-ink)]">{value}</span>
     </div>
   );
 }
@@ -224,36 +170,54 @@ function employmentTypeLabel(view: ReturnType<typeof useContent>["employee"], em
   return view.fullTime;
 }
 
-function rateTypeLabel(view: ReturnType<typeof useContent>["employee"], rateType: string) {
-  if (rateType === "daily") return view.daily;
-  if (rateType === "weekly") return view.weekly;
-  if (rateType === "biWeekly") return view.biWeekly;
-  if (rateType === "monthly") return view.monthly;
-  if (rateType === "annual") return view.annual;
-  return view.hourly;
+function getEmployeeProfileState(employee: EmployeeRecord) {
+  const checks = [
+    Boolean(employee.name?.trim() && employee.email?.trim()),
+    Boolean(employee.role?.trim() && employee.startDate),
+    Boolean(employee.compensation.rateAmount > 0 && employee.compensation.paySchedule),
+    Boolean(employee.payrollSettings.eligibleForPayroll && employee.identity.taxProvince),
+  ];
+
+  return {
+    completed: checks.filter(Boolean).length,
+    total: checks.length,
+    profileComplete: checks[0] && checks[1],
+    payrollComplete: checks[2] && checks[3],
+  };
 }
 
-function payScheduleLabel(view: ReturnType<typeof useContent>["employee"], paySchedule: string) {
-  if (paySchedule === "weekly") return view.weekly;
-  if (paySchedule === "monthly") return view.monthly;
-  return view.biWeekly;
+function getProfileSupportLine(
+  employee: EmployeeRecord,
+  state: ReturnType<typeof getEmployeeProfileState>
+) {
+  if (employee.status === "inactive") return "Inactive employee";
+  if (!state.profileComplete) return "Payroll setup pending";
+  if (!state.payrollComplete) return "Payroll details pending";
+  if (employee.payrollSettings.eligibleForPayroll) return "Payroll ready";
+  return "Payroll setup pending";
 }
 
-function formatAddress(employee: Parameters<typeof employeeCompensationSummary>[0]) {
-  return [
-    employee.address.streetAddress,
-    employee.address.unit,
-    employee.address.city,
-    employee.address.province,
-    employee.address.postalCode,
-    employee.address.country,
-  ]
-    .filter(Boolean)
-    .join(", ");
+function hasEmploymentDetails(employee: EmployeeRecord) {
+  return Boolean(
+    employee.companyId ||
+      employee.role ||
+      employee.startDate ||
+      employee.department ||
+      employee.workLocation ||
+      employee.workSchedule.workingDays.length
+  );
 }
 
-function maskSin(value?: string) {
-  const normalized = value?.replace(/\D/g, "") ?? "";
-  if (!normalized) return "";
-  return `•••••${normalized.slice(-4)}`;
+function formatWorkSchedule(employee: EmployeeRecord) {
+  const hours = employee.workSchedule.hoursPerWeek ? `${employee.workSchedule.hoursPerWeek} hrs/week` : "";
+  const days = employee.workSchedule.workingDays.length ? employee.workSchedule.workingDays.join(", ") : "";
+  return [hours, days].filter(Boolean).join(" · ") || "Not provided";
+}
+
+function ArrowIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} fill="none" aria-hidden="true">
+      <path d="m6.25 4.5 3.5 3.5-3.5 3.5" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
