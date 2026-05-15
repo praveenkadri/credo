@@ -3,7 +3,7 @@ import { FileUploadField } from "@/components/companies/setup/file-upload-field"
 import type { CompanySetupValues } from "@/components/companies/setup/types";
 
 const FIELD_CLASS =
-  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

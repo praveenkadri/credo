@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CompanyDeleteFlow } from "@/components/companies/company-delete-flow";
-import { getCompanyDeleteSummary } from "@/lib/data/companies";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCompanyDeleteSummaryForToken } from "@/lib/data/companies";
 import { SoftNotice } from "@/components/system/SoftNotice";
 import { buttonClassName } from "@/components/ui-primitives/button";
 import { en } from "@/content/en";
@@ -32,9 +34,14 @@ function DeleteState({
 
 export default async function CompanyDeletePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
 
   try {
-    const summary = await getCompanyDeleteSummary(id);
+    const summary = await getCompanyDeleteSummaryForToken(id, user.accessToken);
 
     if (!summary) {
       return (

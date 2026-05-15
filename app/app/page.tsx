@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
 import { OverviewPageClient } from "@/components/overview/overview-page-client";
-import { getCompanies, getCompanyProfile, getCompanySetupPrompts } from "@/lib/data/companies";
-import { routes } from "@/lib/routes";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCompaniesForToken, getCompanyProfileForToken, getCompanySetupPrompts } from "@/lib/data/companies";
 
 export default async function AppDashboardPage({
   searchParams,
@@ -9,8 +9,13 @@ export default async function AppDashboardPage({
   searchParams: Promise<{ deleted?: string }>;
 }) {
   const query = await searchParams;
+  const user = await getCurrentUser();
 
-  const companies = await getCompanies().catch(() => null);
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
+
+  const companies = await getCompaniesForToken(user.accessToken).catch(() => null);
 
   if (companies === null) {
     return (
@@ -25,11 +30,17 @@ export default async function AppDashboardPage({
   }
 
   if (!companies.length) {
-    redirect(routes.firstCompanySetup());
+    return (
+      <OverviewPageClient
+        companies={[]}
+        isEmpty
+        successToastMessage={query.deleted === "1" ? "Company deleted" : undefined}
+      />
+    );
   }
 
   try {
-    const profile = await getCompanyProfile(companies[0].id);
+    const profile = await getCompanyProfileForToken(companies[0].id, user.accessToken);
     const setupPrompt = profile ? getCompanySetupPrompts(profile).primaryPrompt : undefined;
 
     return (

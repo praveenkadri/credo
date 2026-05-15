@@ -1,5 +1,9 @@
 import { routes } from "@/lib/routes";
 import type { PayrollRateType } from "@/lib/payroll-calculations";
+import {
+  requireAuthenticatedSupabaseClient,
+  toSafeSupabaseErrorMessage,
+} from "@/lib/supabase/client";
 
 export type EmployeeStatus = "active" | "inactive";
 export type EmploymentType = "fullTime" | "partTime" | "contractor";
@@ -23,6 +27,7 @@ export type EmployeeIdentity = {
 
 export type EmployeeRecord = {
   id: string;
+  companyId?: string;
   name: string;
   email?: string;
   phone?: string;
@@ -88,13 +93,118 @@ export type EmployeeFormValues = {
   paymentMethod: string;
 };
 
-export const EMPLOYEE_STORAGE_KEY = "credo:employees:v1";
-
 const DEFAULT_WORKING_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const EMPLOYEE_SELECT = [
+  "id",
+  "company_id",
+  "full_name",
+  "status",
+  "email",
+  "phone",
+  "role",
+  "department",
+  "work_location",
+  "start_date",
+  "employment_type",
+  "address_line_1",
+  "address_line_2",
+  "city",
+  "province",
+  "postal_code",
+  "country",
+  "formatted_address",
+  "sin_last_four",
+  "sin_status",
+  "date_of_birth",
+  "tax_province",
+  "rate_type",
+  "rate_amount",
+  "pay_schedule",
+  "hours_per_day",
+  "hours_per_week",
+  "eligible_for_payroll",
+  "default_in_payroll",
+  "payment_method",
+  "notes",
+  "created_at",
+  "updated_at",
+].join(",");
 
+type SupabaseEmployeeRow = {
+  id: string;
+  company_id: string;
+  full_name?: string | null;
+  status?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  role?: string | null;
+  department?: string | null;
+  work_location?: string | null;
+  start_date?: string | null;
+  employment_type?: string | null;
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  formatted_address?: string | null;
+  sin_last_four?: string | null;
+  sin_status?: string | null;
+  date_of_birth?: string | null;
+  tax_province?: string | null;
+  rate_type?: string | null;
+  rate_amount?: number | string | null;
+  pay_schedule?: string | null;
+  hours_per_day?: number | string | null;
+  hours_per_week?: number | string | null;
+  eligible_for_payroll?: boolean | null;
+  default_in_payroll?: boolean | null;
+  payment_method?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type EmployeeSupabaseInput = {
+  company_id: string;
+  full_name: string;
+  status?: EmployeeStatus;
+  email?: string | null;
+  phone?: string | null;
+  role?: string | null;
+  department?: string | null;
+  work_location?: string | null;
+  start_date?: string | null;
+  employment_type?: string | null;
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  formatted_address?: string | null;
+  sin_last_four?: string | null;
+  sin_status?: string;
+  date_of_birth?: string | null;
+  tax_province?: string | null;
+  rate_type?: string;
+  rate_amount?: number;
+  pay_schedule?: string | null;
+  hours_per_day?: number;
+  hours_per_week?: number;
+  eligible_for_payroll?: boolean;
+  default_in_payroll?: boolean;
+  payment_method?: string | null;
+  notes?: string | null;
+};
+
+// Dev/demo fallback only. Never enable this as production workspace data.
+// Normal employee CRUD reads and writes Supabase.
 const seedEmployees: EmployeeRecord[] = [
   {
     id: "maya-chen",
+    companyId: "northline",
     name: "Maya Chen",
     email: "maya@credo.test",
     phone: "416-555-0133",
@@ -112,7 +222,7 @@ const seedEmployees: EmployeeRecord[] = [
       country: "Canada",
     },
     identity: {
-      sin: "512345678",
+      sin: "*****5678",
       dateOfBirth: "1991-04-18",
       taxProvince: "Ontario",
     },
@@ -141,6 +251,7 @@ const seedEmployees: EmployeeRecord[] = [
   },
   {
     id: "jonas-patel",
+    companyId: "northline",
     name: "Jonas Patel",
     email: "jonas@credo.test",
     phone: "647-555-0171",
@@ -157,7 +268,7 @@ const seedEmployees: EmployeeRecord[] = [
       country: "Canada",
     },
     identity: {
-      sin: "478123456",
+      sin: "*****3456",
       dateOfBirth: "1996-09-03",
       taxProvince: "Ontario",
     },
@@ -186,6 +297,7 @@ const seedEmployees: EmployeeRecord[] = [
   },
   {
     id: "amelia-brooks",
+    companyId: "willow",
     name: "Amelia Brooks",
     email: "amelia@credo.test",
     phone: "437-555-0114",
@@ -203,7 +315,7 @@ const seedEmployees: EmployeeRecord[] = [
       country: "Canada",
     },
     identity: {
-      sin: "401239876",
+      sin: "*****9876",
       dateOfBirth: "1989-12-11",
       taxProvince: "Quebec",
     },
@@ -232,6 +344,7 @@ const seedEmployees: EmployeeRecord[] = [
   },
   {
     id: "noah-singh",
+    companyId: "harbor",
     name: "Noah Singh",
     email: "noah@credo.test",
     phone: "905-555-0188",
@@ -248,7 +361,7 @@ const seedEmployees: EmployeeRecord[] = [
       country: "Canada",
     },
     identity: {
-      sin: "589234761",
+      sin: "*****4761",
       sinExpiryDate: "2027-01-15",
       dateOfBirth: "1993-07-22",
       taxProvince: "Ontario",
@@ -311,8 +424,8 @@ export function employeeCompensationSummary(employee: EmployeeRecord) {
   }
 }
 
-export function employeeProfileHref(id: string) {
-  return routes.employee(id);
+export function employeeProfileHref(id: string, companyId?: string) {
+  return companyId ? `${routes.companyEmployees(companyId)}/${id}` : routes.employee(id);
 }
 
 export function employeeEditHref(id: string) {
@@ -408,67 +521,247 @@ export function employeeToFormValues(employee: EmployeeRecord): EmployeeFormValu
   };
 }
 
-export function formValuesToEmployee(values: EmployeeFormValues, existingId?: string): EmployeeRecord {
-  const name = values.name.trim();
-  const id = existingId ?? slugify(name);
+export async function listEmployees(companyId?: string): Promise<EmployeeRecord[]> {
+  return listEmployeesForToken(companyId);
+}
 
-  return {
-    id,
-    name,
-    email: values.email.trim() || undefined,
-    phone: values.phone.trim() || undefined,
-    role: values.role.trim() || undefined,
-    department: values.department.trim() || undefined,
-    workLocation: values.workLocation.trim() || undefined,
-    status: values.status,
-    startDate: values.startDate,
-    employmentType: values.employmentType,
+export async function listEmployeesForToken(companyId?: string, accessToken?: string): Promise<EmployeeRecord[]> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
+  let query = client
+    .from("employees")
+    .select(EMPLOYEE_SELECT)
+    .order("full_name", { ascending: true });
+
+  if (companyId) {
+    query = query.eq("company_id", companyId);
+  } else {
+    const { data: activeCompanies, error: companiesError } = await client
+      .from("companies")
+      .select("id")
+      .eq("status", "active");
+
+    if (companiesError) {
+      throw new Error(`Failed to load active company scope for employees: ${toSafeSupabaseErrorMessage(companiesError)}`);
+    }
+
+    const companyIds = ((activeCompanies as Array<{ id: string }> | null) ?? []).map((company) => company.id);
+    if (!companyIds.length) {
+      return [];
+    }
+
+    query = query.in("company_id", companyIds);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to load employees${companyId ? ` for company ${companyId}` : ""}: ${toSafeSupabaseErrorMessage(error)}`);
+  }
+
+  return (((data as unknown) as SupabaseEmployeeRow[] | null) ?? []).map(mapSupabaseEmployeeToEmployeeRecord);
+}
+
+export async function getEmployee(employeeId: string): Promise<EmployeeRecord | null> {
+  return getEmployeeForToken(employeeId);
+}
+
+export async function getEmployeeForToken(employeeId: string, accessToken?: string): Promise<EmployeeRecord | null> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
+  const { data, error } = await client
+    .from("employees")
+    .select(EMPLOYEE_SELECT)
+    .eq("id", employeeId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load employee ${employeeId}: ${toSafeSupabaseErrorMessage(error)}`);
+  }
+
+  return data ? mapSupabaseEmployeeToEmployeeRecord((data as unknown) as SupabaseEmployeeRow) : null;
+}
+
+export async function createEmployee(input: EmployeeSupabaseInput, sessionAccessToken?: string): Promise<EmployeeRecord> {
+  if (!input.company_id?.trim()) {
+    throw new Error("Cannot create employee without company_id.");
+  }
+
+  if (!input.full_name?.trim()) {
+    throw new Error("Cannot create employee without full_name.");
+  }
+
+  const writeClient = requireAuthenticatedSupabaseClient(sessionAccessToken);
+  const { data, error } = await writeClient
+    .from("employees")
+    .insert(input)
+    .select(EMPLOYEE_SELECT)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create employee for company ${input.company_id}: ${toSafeSupabaseErrorMessage(error)}`);
+  }
+
+  return mapSupabaseEmployeeToEmployeeRecord((data as unknown) as SupabaseEmployeeRow);
+}
+
+export async function updateEmployee(
+  employeeId: string,
+  input: Partial<EmployeeSupabaseInput>,
+  sessionAccessToken?: string
+): Promise<EmployeeRecord> {
+  if (!employeeId.trim()) {
+    throw new Error("Cannot update employee without employeeId.");
+  }
+
+  const writeClient = requireAuthenticatedSupabaseClient(sessionAccessToken);
+  const { data, error } = await writeClient
+    .from("employees")
+    .update(input)
+    .eq("id", employeeId)
+    .select(EMPLOYEE_SELECT)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update employee ${employeeId}: ${toSafeSupabaseErrorMessage(error)}`);
+  }
+
+  return mapSupabaseEmployeeToEmployeeRecord((data as unknown) as SupabaseEmployeeRow);
+}
+
+export async function deactivateEmployee(employeeId: string, sessionAccessToken?: string): Promise<EmployeeRecord> {
+  return updateEmployee(employeeId, {
+    status: "inactive",
+    default_in_payroll: false,
+  }, sessionAccessToken);
+}
+
+export function mapSupabaseEmployeeToEmployeeRecord(row: SupabaseEmployeeRow): EmployeeRecord {
+  const sinLastFour = row.sin_last_four?.replace(/\D/g, "").slice(-4);
+
+  return normalizeEmployeeRecord({
+    id: row.id,
+    companyId: row.company_id,
+    name: row.full_name ?? "",
+    email: row.email ?? undefined,
+    phone: row.phone ?? undefined,
+    role: row.role ?? undefined,
+    department: row.department ?? undefined,
+    workLocation: row.work_location ?? undefined,
+    status: row.status === "inactive" ? "inactive" : "active",
+    startDate: row.start_date ?? "",
+    employmentType: mapEmploymentTypeFromDb(row.employment_type),
     address: {
-      streetAddress: values.streetAddress.trim(),
-      unit: values.unit.trim() || undefined,
-      city: values.city.trim(),
-      province: values.province.trim(),
-      postalCode: values.postalCode.trim(),
-      country: values.country.trim() || "Canada",
+      streetAddress: row.address_line_1 ?? row.formatted_address ?? "",
+      unit: row.address_line_2 ?? undefined,
+      city: row.city ?? "",
+      province: row.province ?? "",
+      postalCode: row.postal_code ?? "",
+      country: row.country ?? "Canada",
     },
     identity: {
-      sin: values.sin.replace(/\s+/g, "") || undefined,
-      sinExpiryDate: values.hasSinExpiry ? values.sinExpiryDate || undefined : undefined,
-      dateOfBirth: values.dateOfBirth || undefined,
-      taxProvince: values.taxProvince.trim() || undefined,
+      sin: sinLastFour ? `*****${sinLastFour}` : undefined,
+      dateOfBirth: row.date_of_birth ?? undefined,
+      taxProvince: row.tax_province ?? undefined,
     },
     compensation: {
-      rateType: values.rateType,
-      rateAmount: Number(values.rateAmount || 0),
-      paySchedule: values.paySchedule,
+      rateType: mapRateTypeFromDb(row.rate_type),
+      rateAmount: toNumber(row.rate_amount, 0),
+      paySchedule: mapPayScheduleFromDb(row.pay_schedule),
       additionalRates: [],
     },
     workSchedule: {
-      hoursPerDay: Number(values.hoursPerDay || 8),
-      hoursPerWeek: Number(values.hoursPerWeek || 40),
+      hoursPerDay: toNumber(row.hours_per_day, 8),
+      hoursPerWeek: toNumber(row.hours_per_week, 40),
       workingDays: DEFAULT_WORKING_DAYS,
       overrides: [],
     },
     payrollSettings: {
-      eligibleForPayroll: values.eligibleForPayroll,
-      defaultInPayroll: values.defaultInPayroll,
-      paymentMethod: values.paymentMethod.trim() || undefined,
-      taxProfile: values.taxProvince.trim() ? `${values.taxProvince.trim()} payroll profile` : "Standard payroll profile",
+      eligibleForPayroll: row.eligible_for_payroll ?? true,
+      defaultInPayroll: row.default_in_payroll ?? true,
+      paymentMethod: row.payment_method ?? "Direct deposit coming soon",
+      taxProfile: row.tax_province ? `${row.tax_province} payroll profile` : "Standard payroll profile",
     },
     activity: {},
+  });
+}
+
+export function mapEmployeeFormValuesToSupabaseInput(values: EmployeeFormValues, companyId?: string): EmployeeSupabaseInput {
+  const name = values.name.trim();
+  const resolvedCompanyId = companyId?.trim() ?? "";
+  const sinDigits = values.sin.replace(/\D/g, "");
+  const hasSin = sinDigits.length > 0;
+
+  return {
+    company_id: resolvedCompanyId,
+    full_name: name,
+    status: values.status,
+    email: nullableText(values.email),
+    phone: nullableText(values.phone),
+    role: nullableText(values.role),
+    department: nullableText(values.department),
+    work_location: nullableText(values.workLocation),
+    start_date: nullableText(values.startDate),
+    employment_type: values.employmentType,
+    address_line_1: nullableText(values.streetAddress),
+    address_line_2: nullableText(values.unit),
+    city: nullableText(values.city),
+    province: nullableText(values.province),
+    postal_code: nullableText(values.postalCode),
+    country: nullableText(values.country) ?? "Canada",
+    formatted_address: nullableText(formatAddressLine(values)),
+    sin_last_four: hasSin ? sinDigits.slice(-4) : null,
+    sin_status: hasSin ? "provided" : "not_provided",
+    date_of_birth: nullableText(values.dateOfBirth),
+    tax_province: nullableText(values.taxProvince),
+    rate_type: values.rateType || "hourly",
+    rate_amount: toNumber(values.rateAmount, 0),
+    pay_schedule: values.paySchedule,
+    hours_per_day: toNumber(values.hoursPerDay, 8),
+    hours_per_week: toNumber(values.hoursPerWeek, 40),
+    eligible_for_payroll: values.eligibleForPayroll,
+    default_in_payroll: values.defaultInPayroll,
+    payment_method: nullableText(values.paymentMethod),
   };
 }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+function nullableText(value: string | undefined) {
+  const trimmed = value?.trim() ?? "";
+  return trimmed ? trimmed : null;
+}
+
+function toNumber(value: number | string | null | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function formatAddressLine(values: EmployeeFormValues) {
+  return [values.streetAddress, values.unit, values.city, values.province, values.postalCode, values.country]
+    .filter((item) => item.trim())
+    .join(", ");
+}
+
+function mapEmploymentTypeFromDb(value?: string | null): EmploymentType {
+  if (value === "partTime" || value === "part_time") return "partTime";
+  if (value === "contractor") return "contractor";
+  return "fullTime";
+}
+
+function mapRateTypeFromDb(value?: string | null): PayrollRateType {
+  if (value === "daily" || value === "weekly" || value === "biWeekly" || value === "monthly" || value === "annual") {
+    return value;
+  }
+  if (value === "bi_weekly") return "biWeekly";
+  return "hourly";
+}
+
+function mapPayScheduleFromDb(value?: string | null): PaySchedule {
+  if (value === "weekly" || value === "monthly") return value;
+  return "biWeekly";
 }
 
 export function normalizeEmployeeRecord(employee: EmployeeRecord): EmployeeRecord {
   return {
     ...employee,
+    companyId: employee.companyId ?? undefined,
     phone: employee.phone ?? undefined,
     department: employee.department ?? undefined,
     workLocation: employee.workLocation ?? undefined,

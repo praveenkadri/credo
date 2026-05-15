@@ -21,7 +21,7 @@ export function RightRailSection({
       {items.map((item) => {
         const title = typeof item === "string" ? item : item.title;
         const className = cn(
-          "px-2 py-2.5 transition-all duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[1px] hover:bg-white/80 hover:text-neutral-900 motion-reduce:hover:translate-y-0"
+          "px-2 py-2.5 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f3f4ef] hover:text-neutral-900"
         );
 
         return typeof item === "string" ? (

@@ -1,19 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createEmployeeAction, updateEmployeeAction } from "@/app/employees/actions";
 import { CompanySetupCard } from "@/components/companies/setup/company-setup-card";
 import { CompanySetupStepHeader } from "@/components/companies/setup/company-setup-step-header";
 import { SetupNavigationButtons } from "@/components/companies/setup/setup-navigation-buttons";
+import { EmptyStateVisual, StepIcon, type BrandIconName, type BrandTone } from "@/components/brand/brand-visuals";
 import { MapboxAddressField } from "@/components/forms/MapboxAddressField";
 import { SoftNotice } from "@/components/system/SoftNotice";
+import { buttonClassName } from "@/components/ui-primitives/button";
 import { Input } from "@/components/ui-primitives/input";
-import { useEmployeesStore } from "@/hooks/useEmployeesStore";
+import { DetailField, DetailFieldGrid } from "@/components/ui-patterns/detail-field-grid";
+import { APP_LAYOUT } from "@/components/ui-shell/layout-constants";
 import {
   employeeToFormValues,
   emptyEmployeeFormValues,
-  formValuesToEmployee,
   formatCurrency,
+  type EmployeeRecord,
   type EmployeeFormValues,
 } from "@/lib/data/employees";
 import {
@@ -23,9 +28,10 @@ import {
 } from "@/lib/mapbox/address-search";
 import { routes, type EmployeeEditSection } from "@/lib/routes";
 import { useContent } from "@/lib/useContent";
+import { cn } from "@/lib/utils";
 
 const FIELD_CLASS =
-  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:outline-none focus-visible:outline-none focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] rounded-2xl bg-[#fafaf7] px-4 text-[14px] text-[#575b55] transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:outline-none focus-visible:outline-none focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 type EmployeeSetupStep = 1 | 2 | 3 | 4 | 5;
 
@@ -51,21 +57,27 @@ export function EmployeeFormPage({
   mode,
   employeeId,
   focusSection,
+  companyId,
+  companyName,
+  existingEmployee: providedEmployee,
 }: {
   mode: "create" | "edit";
   employeeId?: string;
   focusSection?: EmployeeEditSection;
+  companyId?: string;
+  companyName?: string;
+  existingEmployee?: EmployeeRecord | null;
 }) {
   const c = useContent();
   const view = c.employee;
   const router = useRouter();
-  const { employees, saveEmployee } = useEmployeesStore();
-  const cancelHref = mode === "edit" && employeeId ? routes.employee(employeeId) : routes.employees;
+  const cancelHref = mode === "edit" && employeeId
+    ? routes.employee(employeeId)
+    : companyId
+      ? routes.companyEmployees(companyId)
+      : routes.employees;
   const isFocusedSectionMode = mode === "edit" && Boolean(focusSection);
-  const existingEmployee = useMemo(
-    () => (employeeId ? employees.find((employee) => employee.id === employeeId) ?? null : null),
-    [employeeId, employees]
-  );
+  const existingEmployee = providedEmployee ?? null;
 
   const [step, setStep] = useState<EmployeeSetupStep>(() => resolveStepFromSection(focusSection));
   const [values, setValues] = useState<EmployeeFormValues>(() =>
@@ -137,7 +149,7 @@ export function EmployeeFormPage({
     setStep((current) => nextEmployeeStep(current));
   }
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormSubmitted(true);
     const nextError = isFocusedSectionMode
@@ -149,9 +161,15 @@ export function EmployeeFormPage({
       return;
     }
 
-    const employee = formValuesToEmployee(values, existingEmployee?.id);
-    saveEmployee(employee);
-    router.push(routes.employee(employee.id));
+    const resolvedCompanyId = existingEmployee?.companyId ?? companyId;
+    const result =
+      mode === "edit" && existingEmployee
+        ? await updateEmployeeAction(existingEmployee.id, values, resolvedCompanyId)
+        : await createEmployeeAction(values, resolvedCompanyId);
+
+    if (result?.error) {
+      setError(result.error);
+    }
   }
 
   const headerTitle = isFocusedSectionMode ? sectionTitle(view, focusSection!) : mode === "edit" ? view.editEmployee : view.createTitle;
@@ -160,18 +178,31 @@ export function EmployeeFormPage({
     : mode === "edit"
       ? view.editDescription
       : view.createDescription;
+  const scopedCompanyLabel = mode === "create" && companyId && companyName ? `Adding to ${companyName}` : undefined;
   const finalActionLabel = isFocusedSectionMode ? c.common.saveChanges : view.saveStep;
 
   return (
     <div className="w-full">
       <form onSubmit={onSubmit} className="flex flex-col">
-        <div className="mx-auto w-full max-w-[700px] shell-enter">
+        <div className={cn("mx-auto w-full shell-enter", APP_LAYOUT.focusedContentMaxWidth)}>
+          {mode === "create" && companyId ? (
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <Link href={routes.companyEmployees(companyId)} className={buttonClassName("secondary")}>
+                <span aria-hidden="true">←</span> Back to employees
+              </Link>
+              <span className="type-caption text-neutral-400">
+                {companyName ? `${companyName} / Employees / Add employee` : "Employees / Add employee"}
+              </span>
+            </div>
+          ) : null}
+
           <CompanySetupStepHeader
             step={step}
             totalSteps={isFocusedSectionMode ? 1 : 5}
             showStepLabel={false}
             title={headerTitle}
             subtitle={headerSubtitle}
+            contextLabel={scopedCompanyLabel}
             onBack={
               isFocusedSectionMode
                 ? () => {
@@ -185,6 +216,7 @@ export function EmployeeFormPage({
                   }
                 : undefined
             }
+            stepIcon={<StepIcon {...employeeStepVisual(step)} />}
           />
 
           {error ? (
@@ -280,7 +312,7 @@ export function EmployeeFormPage({
                     <button
                       type="button"
                       onClick={() => setSinVisible((current) => !current)}
-                      className="type-button inline-flex h-[52px] shrink-0 items-center rounded-2xl bg-white/80 px-4 text-neutral-700 ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white"
+                      className={`${buttonClassName("secondary")} h-[52px] shrink-0 px-4`}
                     >
                       {sinVisible ? view.hideSin : view.revealSin}
                     </button>
@@ -292,12 +324,12 @@ export function EmployeeFormPage({
                 <Field label={view.taxProvince}>
                   <Input value={values.taxProvince} onChange={(event) => update("taxProvince", event.target.value)} className={FIELD_CLASS} />
                 </Field>
-                <label className="flex items-center gap-2.5 rounded-xl bg-white/60 px-3 py-2 ring-1 ring-neutral-200/50">
+                <label className="flex items-center gap-2.5 rounded-xl bg-[#f3f4ef] px-3 py-2">
                   <input
                     type="checkbox"
                     checked={values.hasSinExpiry}
                     onChange={(event) => update("hasSinExpiry", event.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+                    className="h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
                   />
                   <span className="type-body-small text-neutral-700">{view.sinExpiryToggle}</span>
                 </label>
@@ -355,25 +387,26 @@ export function EmployeeFormPage({
 
             {step === 5 ? (
               <div className="space-y-4">
-                <label className="flex items-center gap-2.5 rounded-xl bg-white/60 px-3 py-2 ring-1 ring-neutral-200/50">
+                <EmptyStateVisual type="payroll" className="mb-2" />
+                <label className="flex items-center gap-2.5 rounded-xl bg-[#f3f4ef] px-3 py-2">
                   <input
                     type="checkbox"
                     checked={values.eligibleForPayroll}
                     onChange={(event) => update("eligibleForPayroll", event.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+                    className="h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
                   />
                   <span className="type-body-small text-neutral-700">{view.eligibleForPayroll}</span>
                 </label>
-                <label className="flex items-center gap-2.5 rounded-xl bg-white/60 px-3 py-2 ring-1 ring-neutral-200/50">
+                <label className="flex items-center gap-2.5 rounded-xl bg-[#f3f4ef] px-3 py-2">
                   <input
                     type="checkbox"
                     checked={values.defaultInPayroll}
                     onChange={(event) => update("defaultInPayroll", event.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+                    className="h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
                   />
                   <span className="type-body-small text-neutral-700">{view.defaultInPayroll}</span>
                 </label>
-                <div className="space-y-4 rounded-2xl bg-white/60 p-4 ring-1 ring-neutral-200/50">
+                <div className="space-y-4 rounded-2xl bg-[#f3f4ef] p-4">
                   <ReviewGroup
                     title={view.personalDetails}
                     items={[
@@ -448,14 +481,11 @@ function ReviewGroup({
   return (
     <div className="space-y-2">
       <h2 className="type-card-title">{title}</h2>
-      <div className="space-y-2">
+      <DetailFieldGrid>
         {items.map((item) => (
-          <div key={`${title}-${item.label}`} className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-            <p className="type-caption text-neutral-500">{item.label}</p>
-            <p className="type-body sm:max-w-[58%] sm:text-right text-[#1f221c]">{item.value || "Not provided"}</p>
-          </div>
+          <DetailField key={`${title}-${item.label}`} label={item.label} value={item.value} emptyLabel="Not provided" />
         ))}
-      </div>
+      </DetailFieldGrid>
     </div>
   );
 }
@@ -547,6 +577,14 @@ function payScheduleLabel(view: ReturnType<typeof useContent>["employee"], paySc
   return view.biWeekly;
 }
 
+function employeeStepVisual(step: EmployeeSetupStep): { icon: BrandIconName; tone: BrandTone } {
+  if (step === 1) return { icon: "person", tone: "sky" };
+  if (step === 2) return { icon: "profile", tone: "sky" };
+  if (step === 3) return { icon: "tax", tone: "lavender" };
+  if (step === 4) return { icon: "payroll", tone: "sand" };
+  return { icon: "check", tone: "olive" };
+}
+
 function formatAddress(values: EmployeeFormValues) {
   return [values.streetAddress, values.unit, values.city, values.province, values.postalCode, values.country]
     .filter(Boolean)
@@ -604,4 +642,4 @@ function sectionSubtitle(view: ReturnType<typeof useContent>["employee"], sectio
 }
 
 const SELECT_CLASS =
-  "h-[52px] w-full rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:outline-none focus-visible:outline-none focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] w-full rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:outline-none focus-visible:outline-none focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";

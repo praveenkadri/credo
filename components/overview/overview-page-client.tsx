@@ -60,6 +60,7 @@ export function OverviewPageClient({
           exiting={bannerExiting}
           onDismiss={dismissBanner}
           actionLabel={setupPrompt?.cta ?? "View"}
+          actionStyle={setupPrompt ? "text" : "filled"}
           actionHref={setupPrompt?.href}
         />
       ) : null}
@@ -68,7 +69,7 @@ export function OverviewPageClient({
         {isEmpty ? (
           <CashMovementEmpty
             ctaHref={isError ? routes.overview : routes.firstCompanySetup()}
-            title={isError ? "We couldn’t load company data" : "No company activity yet"}
+            title={isError ? "We couldn’t load company data" : "No payroll activity yet"}
             description={
               isError
                 ? "Try again to reload your workspace data."
@@ -78,7 +79,7 @@ export function OverviewPageClient({
             noticeVariant={isError ? "error" : "warning"}
           />
         ) : isZeroActivityState ? (
-          <CashMovementNoActivity />
+          <CashMovementNoActivity companies={companies} />
         ) : (
           <CashMovementChart {...cashMovementChart} />
         )}

@@ -2,9 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { confirmCompany, createCompany, softDeleteCompany, type DeleteCompanyReason, updateCompany } from "@/lib/data/companies";
+import {
+  CompanyCreateError,
+  confirmCompany,
+  createCompany,
+  softDeleteCompany,
+  type DeleteCompanyReason,
+  updateCompany,
+} from "@/lib/data/companies";
+import { requireCurrentUser } from "@/lib/auth/session";
 import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import { routes } from "@/lib/routes";
+import { toSafeAppErrorMessage } from "@/lib/supabase/client";
 import { en } from "@/content/en";
 
 export type CompanyProfileActionState = {
@@ -58,9 +67,6 @@ function parseProfileInput(formData: FormData) {
       addressHasSubpremise: String(formData.get("addressHasSubpremise") ?? "").trim() === "true",
       latitude: String(formData.get("latitude") ?? "").trim(),
       longitude: String(formData.get("longitude") ?? "").trim(),
-      sessionAccessToken: String(formData.get("sessionAccessToken") ?? "").trim(),
-      sessionUserId: String(formData.get("sessionUserId") ?? "").trim(),
-      sessionWorkspaceId: String(formData.get("sessionWorkspaceId") ?? "").trim(),
       hstNumber: String(formData.get("hstNumber") ?? "").trim(),
       payrollNumber: String(formData.get("payrollNumber") ?? "").trim(),
       binNumber: String(formData.get("binNumber") ?? "").trim(),
@@ -84,7 +90,8 @@ export async function createCompanyProfileAction(
   }
 
   try {
-    const { id } = await createCompany(parsed.input);
+    const user = await requireCurrentUser();
+    const { id } = await createCompany(parsed.input, user.accessToken);
 
     revalidatePath("/");
 
@@ -98,6 +105,10 @@ export async function createCompanyProfileAction(
   } catch (error) {
     if (isNextRedirectError(error)) {
       throw error;
+    }
+
+    if (error instanceof CompanyCreateError) {
+      return { error: error.userMessage };
     }
 
     return { error: en.actions.profile.saveError };
@@ -115,7 +126,8 @@ export async function updateCompanyProfileAction(
   }
 
   try {
-    await updateCompany(companyId, parsed.input);
+    const user = await requireCurrentUser();
+    await updateCompany(companyId, parsed.input, user.accessToken);
 
     revalidatePath("/");
     revalidatePath(routes.company(companyId));
@@ -126,16 +138,18 @@ export async function updateCompanyProfileAction(
       throw error;
     }
 
-    return { error: en.actions.profile.updateError };
+    return { error: toSafeAppErrorMessage(error) };
   }
 }
 
 export async function confirmCompanyProfileAction(
   companyId: string,
-  _prevState: CompanyProfileActionState
+  _prevState: CompanyProfileActionState,
+  formData: FormData
 ): Promise<CompanyProfileActionState> {
   try {
-    await confirmCompany(companyId);
+    const user = await requireCurrentUser();
+    await confirmCompany(companyId, user.accessToken);
     revalidatePath("/");
     revalidatePath(routes.company(companyId));
     revalidatePath(routes.companyProfile(companyId));
@@ -146,7 +160,7 @@ export async function confirmCompanyProfileAction(
       throw error;
     }
 
-    return { error: en.actions.profile.confirmError };
+    return { error: toSafeAppErrorMessage(error) };
   }
 }
 
@@ -167,7 +181,6 @@ export async function deleteCompanyAction(
   const acknowledged = formData.get("confirmDelete") === "on";
   const reason = String(formData.get("deleteReason") ?? "").trim();
   const reasonNote = String(formData.get("deleteReasonNote") ?? "").trim();
-  const sessionAccessToken = String(formData.get("sessionAccessToken") ?? "").trim();
 
   if (!acknowledged) {
     return {
@@ -182,11 +195,12 @@ export async function deleteCompanyAction(
   }
 
   try {
+    const user = await requireCurrentUser();
     const { redirectTo } = await softDeleteCompany({
       companyId,
       reason: reason as DeleteCompanyReason,
       reasonNote,
-      sessionAccessToken,
+      sessionAccessToken: user.accessToken,
     });
 
     revalidatePath("/");
@@ -206,7 +220,7 @@ export async function deleteCompanyAction(
     }
 
     return {
-      error: error instanceof Error ? error.message : en.company.delete.genericDeleteError,
+      error: error instanceof Error ? toSafeAppErrorMessage(error) : en.company.delete.genericDeleteError,
     };
   }
 }

@@ -1,24 +1,34 @@
-# Agent Read Order — Wealthsimple Lock
+# Credo AI Read Order
 
-Use this order before any UI change.
+Before any UI or UX change, read these files in this order:
 
-1. `AI/codex-enforcement.md`
-2. `AI/ws-reference-system.md`
-3. `AI/wealthsimple-page-lock.md`
-4. `AI/shell-language.md`
-5. `AI/chart-system.md`
-6. `AI/sidebar-system.md`
-7. `AI/topbar-system.md`
-8. `AI/right-rail-system.md`
-9. `AI/component-lock-system.md`
-10. `AI/design-drift-guard.md`
-11. page-specific files if present
-12. `AI/codex-auto-audit.md` when reviewing
+1. `AI/agent.md`
+2. `AI/design-system/credo-design-system.md`
+3. `AI/rules/progressive-navigation.md`
+4. `AI/rules/overview-empty-state-rules.md`
+5. `AI/rules/right-rail-rules.md`
+6. `AI/rules/shell-layout-rules.md`
+7. `AI/rules/component-system-rules.md`
+8. `AI/checklists/design-review-checklist.md`
+9. `AI/checklists/implementation-guardrails.md`
 
-Do not skip files.
-Do not cherry-pick.
-Do not invent a parallel style.
+Only read security/PDF checklists when touching those areas:
 
-If the page still reads as a generic SaaS dashboard after changes, it is wrong.
+- `AI/checklists/auth-security-rls-checklist.md`
+- `AI/checklists/private-documents-checklist.md`
 
-13. `AI/hero-graph-lock.md` when a hero graph is present
+Reference files are reference-only, not override files:
+
+- `AI/reference/nivo-ws-reference.md`
+
+## Conflict resolution
+
+When files conflict, prefer the rule that is:
+- calmer
+- less card-heavy
+- more progressive
+- more componentized
+- more WS/Nivo-like
+- less dashboard-like
+
+Do not invent a parallel design system.

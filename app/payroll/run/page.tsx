@@ -1,5 +1,14 @@
 import { redirect } from "next/navigation";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 
-export default function RunPayrollPage() {
-  redirect("/payroll");
+export default async function RunPayrollPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
+
+  redirect(routes.runPayroll);
 }

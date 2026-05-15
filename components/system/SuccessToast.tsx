@@ -36,7 +36,7 @@ export function SuccessToast({
       role="status"
       aria-live="polite"
     >
-      <div className="rounded-2xl bg-[#242421] px-4 py-2.5 text-[12px] font-medium tracking-[-0.005em] text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)]">
+      <div className="rounded-2xl bg-[var(--credo-hero)] px-4 py-2.5 text-[12px] font-medium tracking-[-0.005em] text-white shadow-[0_12px_28px_rgba(18,54,44,0.2)]">
         {message}
       </div>
     </div>

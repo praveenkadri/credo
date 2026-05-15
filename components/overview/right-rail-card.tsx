@@ -1,5 +1,4 @@
 import { SurfacePanel } from "@/components/ui-patterns/surface-panel";
-import { surfaceClass } from "@/components/ui/surface";
 import { cn } from "@/lib/utils";
 
 export function RightRailCard({
@@ -20,9 +19,8 @@ export function RightRailCard({
       title={title}
       eyebrow={eyebrow}
       className={cn(
-        surfaceClass("rightRailCard"),
-        "p-6",
-        "[&_h2]:type-caption [&_h2]:text-neutral-600",
+        "rounded-[32px] bg-white p-5 shadow-[0_20px_70px_rgba(17,24,39,0.065)]",
+        "[&_h2]:type-caption [&_h2]:font-semibold [&_h2]:text-neutral-500",
         className
       )}
       tone={tone}

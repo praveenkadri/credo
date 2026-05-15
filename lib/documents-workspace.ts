@@ -3,10 +3,11 @@ import { parseDateOnly } from "@/lib/payroll-calculations";
 import { useContent } from "@/lib/useContent";
 
 export type DocumentQuickFilterId = "all" | "payroll" | "employee" | "tax" | "company";
-export type DocumentCompanyFilterId = "all" | "northline" | "willow" | "harbor";
+export type DocumentCompanyFilterId = "all" | string;
 export type DocumentTeamFilterId = "all" | "operations" | "client-success" | "finance" | "leadership";
-export type DocumentEmployeeFilterId = "all" | "maya-chen" | "jonas-patel" | "amelia-brooks" | "noah-singh";
+export type DocumentEmployeeFilterId = "all" | string;
 export type DocumentDateRangeId = "all" | "april-2026" | "q1-2026" | "fy-2026" | "fy-2025";
+export type DocumentStatusFilterId = "all" | string;
 
 export type DocumentsFilters = {
   quick: DocumentQuickFilterId;
@@ -14,22 +15,32 @@ export type DocumentsFilters = {
   team: DocumentTeamFilterId;
   employee: DocumentEmployeeFilterId;
   dateRange: DocumentDateRangeId;
+  status: DocumentStatusFilterId;
 };
 
 export type DocumentRecord = {
   id: string;
   title: string;
-  typeId: "pay-stub" | "payroll-run" | "letter" | "tax-form";
+  typeId: "pay-stub" | "payroll-run" | "letter" | "tax-form" | "company-document" | "employee-document";
   typeLabel: string;
-  companyId: Exclude<DocumentCompanyFilterId, "all">;
+  companyId: string;
   companyLabel: string;
-  teamId: Exclude<DocumentTeamFilterId, "all">;
+  teamId: string;
   teamLabel: string;
-  employeeId?: Exclude<DocumentEmployeeFilterId, "all">;
+  employeeId?: string;
   employeeLabel?: string;
   date: string;
-  openHref: string;
-  downloadName: string;
+  status: string;
+  openHref?: string;
+  downloadName?: string;
+  downloadHref?: string;
+  fileAvailable?: boolean;
+  fileMetadataMissing?: boolean;
+  fileName?: string;
+  fileSizeBytes?: number;
+  generatedAt?: string;
+  generationError?: string;
+  generationStatus?: "pending" | "generating" | "generated" | "failed" | string;
 };
 
 const DEFAULT_FILTERS: DocumentsFilters = {
@@ -38,6 +49,7 @@ const DEFAULT_FILTERS: DocumentsFilters = {
   team: "all",
   employee: "all",
   dateRange: "all",
+  status: "all",
 };
 
 export function getDocumentsFilters(searchParams: URLSearchParams | ReadonlyURLSearchParamsLike): DocumentsFilters {
@@ -47,6 +59,7 @@ export function getDocumentsFilters(searchParams: URLSearchParams | ReadonlyURLS
     team: normalizeDocumentTeamFilter(searchParams.get("team")),
     employee: normalizeDocumentEmployeeFilter(searchParams.get("employee")),
     dateRange: normalizeDocumentDateRange(searchParams.get("dateRange")),
+    status: normalizeDocumentStatusFilter(searchParams.get("status")),
   };
 }
 
@@ -58,9 +71,12 @@ export function createDocumentsHref(filters: DocumentsFilters, updates: Partial<
     team: next.team !== DEFAULT_FILTERS.team ? next.team : undefined,
     employee: next.employee !== DEFAULT_FILTERS.employee ? next.employee : undefined,
     dateRange: next.dateRange !== DEFAULT_FILTERS.dateRange ? next.dateRange : undefined,
+    status: next.status !== DEFAULT_FILTERS.status ? next.status : undefined,
   });
 }
 
+// Dev/demo fallback only. Never enable this as production workspace data.
+// Normal documents pages receive Supabase records from lib/data/documents.
 export function getDocumentRecords(view: ReturnType<typeof useContent>["documents"]): DocumentRecord[] {
   return [
     createRecord({
@@ -75,6 +91,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "maya-chen",
       employeeLabel: view.entities.employees.mayaChen,
       date: "2026-04-19",
+      status: "generated",
       downloadName: "maya-chen-pay-stub-apr-19-2026.txt",
       previewLines: [view.items.mayaPaystubApril.title, view.types.payStub, view.entities.companies.northline, "Apr 19, 2026"],
     }),
@@ -88,6 +105,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       teamId: "finance",
       teamLabel: view.entities.teams.finance,
       date: "2026-04-18",
+      status: "generated",
       downloadName: "northline-payroll-run-apr-18-2026.txt",
       previewLines: [view.items.northlinePayrollRun.title, view.types.payrollRun, view.entities.companies.northline, "Apr 18, 2026"],
     }),
@@ -103,6 +121,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "jonas-patel",
       employeeLabel: view.entities.employees.jonasPatel,
       date: "2026-04-19",
+      status: "generated",
       downloadName: "jonas-patel-pay-stub-apr-19-2026.txt",
       previewLines: [view.items.jonasPaystubApril.title, view.types.payStub, view.entities.companies.northline, "Apr 19, 2026"],
     }),
@@ -118,6 +137,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "amelia-brooks",
       employeeLabel: view.entities.employees.ameliaBrooks,
       date: "2026-04-12",
+      status: "generated",
       downloadName: "amelia-brooks-bonus-letter.txt",
       previewLines: [view.items.ameliaBonusLetter.title, view.types.letter, view.entities.companies.willow, "Apr 12, 2026"],
     }),
@@ -131,6 +151,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       teamId: "leadership",
       teamLabel: view.entities.teams.leadership,
       date: "2026-04-08",
+      status: "generated",
       downloadName: "board-resolution-package-apr-2026.txt",
       previewLines: [view.items.boardResolution.title, view.types.letter, view.entities.companies.harbor, "Apr 8, 2026"],
     }),
@@ -146,6 +167,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "maya-chen",
       employeeLabel: view.entities.employees.mayaChen,
       date: "2026-03-22",
+      status: "generated",
       downloadName: "maya-chen-employment-verification.txt",
       previewLines: [view.items.mayaVerificationLetter.title, view.types.letter, view.entities.companies.northline, "Mar 22, 2026"],
     }),
@@ -161,6 +183,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "noah-singh",
       employeeLabel: view.entities.employees.noahSingh,
       date: "2026-03-28",
+      status: "generated",
       downloadName: "noah-singh-record-of-employment.txt",
       previewLines: [view.items.noahRoe.title, view.types.taxForm, view.entities.companies.harbor, "Mar 28, 2026"],
     }),
@@ -176,6 +199,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "maya-chen",
       employeeLabel: view.entities.employees.mayaChen,
       date: "2025-12-31",
+      status: "generated",
       downloadName: "maya-chen-t4-2025.txt",
       previewLines: [view.items.mayaT4.title, view.types.taxForm, view.entities.companies.northline, "Dec 31, 2025"],
     }),
@@ -191,6 +215,7 @@ export function getDocumentRecords(view: ReturnType<typeof useContent>["document
       employeeId: "jonas-patel",
       employeeLabel: view.entities.employees.jonasPatel,
       date: "2025-12-31",
+      status: "generated",
       downloadName: "jonas-patel-t4-2025.txt",
       previewLines: [view.items.jonasT4.title, view.types.taxForm, view.entities.companies.northline, "Dec 31, 2025"],
     }),
@@ -214,8 +239,9 @@ export function filterDocuments(records: DocumentRecord[], filters: DocumentsFil
     const matchesTeam = filters.team === "all" || record.teamId === filters.team;
     const matchesEmployee = filters.employee === "all" || record.employeeId === filters.employee;
     const matchesDate = matchesDocumentDateRange(record.date, filters.dateRange);
+    const matchesStatus = filters.status === "all" || record.status === filters.status;
 
-    return matchesQuick && matchesCompany && matchesTeam && matchesEmployee && matchesDate;
+    return matchesQuick && matchesCompany && matchesTeam && matchesEmployee && matchesDate && matchesStatus;
   });
 }
 
@@ -240,6 +266,25 @@ export function formatWorkspaceDateLabel(value: string) {
     year: "numeric",
     timeZone: "UTC",
   }).format(parsed);
+}
+
+export function getDocumentStateLabel(document: Pick<DocumentRecord, "fileAvailable" | "fileMetadataMissing" | "generationStatus" | "status">) {
+  const status = document.generationStatus ?? document.status;
+  if (status === "generating") return "Generating";
+  if (status === "failed") return "Failed";
+  if (document.fileMetadataMissing) return "Missing file metadata";
+  if (document.fileAvailable && status === "generated") return "Generated";
+  if (document.fileAvailable) return "PDF ready";
+  return "Needs PDF";
+}
+
+export function getPayrollDocumentStateLabel(document: Pick<DocumentRecord, "fileAvailable" | "fileMetadataMissing" | "generationStatus" | "status">) {
+  const status = document.generationStatus ?? document.status;
+  if (status === "generating") return "Generating";
+  if (status === "failed") return "Failed";
+  if (document.fileMetadataMissing) return "Needs generation";
+  if (document.fileAvailable) return "PDF ready";
+  return "Needs generation";
 }
 
 type ReadonlyURLSearchParamsLike = {
@@ -274,11 +319,7 @@ function normalizeDocumentQuickFilter(value: string | null): DocumentQuickFilter
 }
 
 function normalizeDocumentCompanyFilter(value: string | null): DocumentCompanyFilterId {
-  if (value === "northline" || value === "willow" || value === "harbor") {
-    return value;
-  }
-
-  return "all";
+  return value?.trim() || "all";
 }
 
 function normalizeDocumentTeamFilter(value: string | null): DocumentTeamFilterId {
@@ -290,11 +331,7 @@ function normalizeDocumentTeamFilter(value: string | null): DocumentTeamFilterId
 }
 
 function normalizeDocumentEmployeeFilter(value: string | null): DocumentEmployeeFilterId {
-  if (value === "maya-chen" || value === "jonas-patel" || value === "amelia-brooks" || value === "noah-singh") {
-    return value;
-  }
-
-  return "all";
+  return value?.trim() || "all";
 }
 
 function normalizeDocumentDateRange(value: string | null): DocumentDateRangeId {
@@ -303,4 +340,8 @@ function normalizeDocumentDateRange(value: string | null): DocumentDateRangeId {
   }
 
   return "all";
+}
+
+function normalizeDocumentStatusFilter(value: string | null): DocumentStatusFilterId {
+  return value?.trim() || "all";
 }

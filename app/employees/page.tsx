@@ -1,5 +1,15 @@
 import { EmployeeListPage } from "@/components/employees/employee-list-page";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { listEmployeesForToken } from "@/lib/data/employees";
 
-export default function EmployeesPage() {
-  return <EmployeeListPage />;
+export default async function EmployeesPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
+
+  const employees = await listEmployeesForToken(undefined, user.accessToken);
+  return <EmployeeListPage employees={employees} />;
 }

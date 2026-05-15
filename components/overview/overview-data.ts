@@ -6,19 +6,19 @@ import {
 } from "@/lib/overview-decision-data";
 
 export const stateToneMap: Record<string, string> = {
-  Healthy: "text-[#5f685d]",
-  "Needs review": "text-[#5f6457]",
-  "Funding due": "text-[#6a6252]",
-  "Invoice backlog": "text-[#615f57]",
-  "Filing soon": "text-[#5d6456]",
+  Healthy: "text-[var(--credo-green-950)]",
+  "Needs review": "text-[var(--credo-bronze-700)]",
+  "Funding due": "text-[var(--credo-bronze-700)]",
+  "Invoice backlog": "text-[var(--credo-muted-strong)]",
+  "Filing soon": "text-[var(--credo-green-800)]",
 };
 
 export const statePillToneMap: Record<string, string> = {
-  Healthy: "bg-white/75 text-[#5f685d] ring-white/70",
-  "Needs review": "bg-white/80 text-[#5f6457] ring-white/75",
-  "Funding due": "bg-white/80 text-[#6a6252] ring-white/75",
-  "Invoice backlog": "bg-white/75 text-[#615f57] ring-white/70",
-  "Filing soon": "bg-white/75 text-[#5d6456] ring-white/70",
+  Healthy: "bg-[var(--credo-taupe-wash)] text-[var(--credo-green-950)] ring-[rgba(91,77,58,0.18)]",
+  "Needs review": "bg-[var(--credo-bronze-pale)] text-[var(--credo-bronze-700)] ring-[var(--credo-taupe-strong)]",
+  "Funding due": "bg-[var(--credo-bronze-pale)] text-[var(--credo-bronze-700)] ring-[var(--credo-taupe-strong)]",
+  "Invoice backlog": "bg-[var(--credo-bronze-pale)] text-[var(--credo-muted-strong)] ring-[var(--credo-taupe-strong)]",
+  "Filing soon": "bg-[var(--credo-cream-muted)] text-[var(--credo-green-800)] ring-[var(--credo-taupe-strong)]",
 };
 
 function initialsFor(name: string) {
@@ -42,8 +42,8 @@ export const companies = COMPANIES.map((company, index) => ({
 }));
 
 export const cashMovementChart = {
-  title: "Cash movement",
-  valueLabel: "Portfolio value",
+  title: "Net revenue",
+  valueLabel: "Net revenue",
   currentValue: "$18,403.77",
   deltaText: "+$191.50 past day",
   deltaPositive: true,

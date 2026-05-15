@@ -11,6 +11,7 @@ export type CompanyRecord = {
   lastActivity: string;
   payrollAmount: string;
   employeeCount: number;
+  createdAt?: string;
   state: CompanyOperationalState;
   stateDetail: string;
   fundingDueInDays?: number;

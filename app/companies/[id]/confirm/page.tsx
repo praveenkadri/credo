@@ -1,8 +1,10 @@
 import { CompanyProfileView } from "@/components/companies/company-profile-view";
 import { CompanyConfirmActions } from "@/components/companies/company-confirm-actions";
-import { getCompanyProfile } from "@/lib/data/companies";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCompanyProfileForToken } from "@/lib/data/companies";
 import Link from "next/link";
 import { SoftNotice } from "@/components/system/SoftNotice";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
 import { buttonClassName } from "@/components/ui-primitives/button";
 
 function ConfirmState({
@@ -32,9 +34,14 @@ function ConfirmState({
 
 export default async function CompanyConfirmPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
 
   try {
-    const profile = await getCompanyProfile(id);
+    const profile = await getCompanyProfileForToken(id, user.accessToken);
 
     if (!profile) {
       return (

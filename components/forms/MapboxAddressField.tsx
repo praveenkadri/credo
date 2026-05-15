@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui-primitives/input";
 import { SoftNotice } from "@/components/system/SoftNotice";
+import { buttonClassName } from "@/components/ui-primitives/button";
 import {
   isAddressComplete,
   normalizeAddressValue,
@@ -15,7 +16,7 @@ import {
 import { useContent } from "@/lib/useContent";
 
 const FIELD_CLASS =
-  "h-[56px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[56px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 type MapboxAddressFieldProps = {
   value: AddressValue;
@@ -177,7 +178,7 @@ export function MapboxAddressField({
     (showRequiredError || isTouched);
   const addressFieldClass = showAddressError
     ? "h-[52px] rounded-2xl bg-rose-50/40 px-4 text-[14px] text-[#4b1d1d] ring-1 ring-red-200/70 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-rose-50/60 focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-red-200/80"
-    : "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+    : "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
   const addressFieldClassTall = showAddressError
     ? "h-[56px] rounded-2xl bg-rose-50/40 px-4 text-[14px] text-[#4b1d1d] ring-1 ring-red-200/70 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-rose-50/60 focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-red-200/80"
     : FIELD_CLASS;
@@ -252,7 +253,7 @@ export function MapboxAddressField({
                   <li key={suggestion.id}>
                     <button
                       type="button"
-                      className="w-full rounded-xl px-3 py-2 text-left transition-colors duration-[160ms] hover:bg-neutral-100/70"
+                      className={`${buttonClassName("menuItem")} h-auto py-2`}
                       onClick={() => handleSuggestionSelect(suggestion)}
                     >
                       <p className="type-body-small text-neutral-800">{suggestion.line1 || suggestion.label}</p>
@@ -270,7 +271,7 @@ export function MapboxAddressField({
                       setOpen(false);
                       onChange(manualAddressFrom(normalizedValue, defaultCountry));
                     }}
-                    className="type-body-small w-full rounded-xl px-3 py-2 text-left text-neutral-700 transition-colors duration-[160ms] hover:bg-neutral-100/70 hover:text-neutral-900"
+                    className={`${buttonClassName("menuItem")} h-auto py-2`}
                   >
                     {c.addressField.manualEntryCta}
                   </button>
@@ -296,7 +297,7 @@ export function MapboxAddressField({
             onClick={() => {
               onShowUnitSuiteChange?.(true);
             }}
-            className="type-body-small inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
+            className={buttonClassName("subtle")}
           >
             {c.addressField.addUnitSuite}
           </button>
@@ -321,7 +322,7 @@ export function MapboxAddressField({
                 verified: false,
               });
             }}
-            className="type-body-small inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/60 hover:text-neutral-900"
+            className={buttonClassName("subtle")}
           >
             {c.addressField.changeAddress}
           </button>

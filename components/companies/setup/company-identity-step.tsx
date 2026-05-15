@@ -2,7 +2,7 @@ import { Input } from "@/components/ui-primitives/input";
 import type { CompanySetupValues } from "@/components/companies/setup/types";
 
 const FIELD_CLASS =
-  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 function Field({
   label,
@@ -60,7 +60,7 @@ export function CompanyIdentityStep({
           type="checkbox"
           checked={values.sameAsCompanyName}
           onChange={(event) => onToggleSameAs(event.target.checked)}
-          className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+          className="h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
         />
         <span className="text-[12px] text-neutral-700">Legal name is same as company name</span>
       </label>

@@ -1,3 +1,5 @@
+import { buttonClassName } from "@/components/ui-primitives/button";
+
 export function ReviewSectionCard({
   title,
   onEdit,
@@ -14,7 +16,7 @@ export function ReviewSectionCard({
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex h-7 items-center rounded-lg px-2 text-[12px] font-medium text-neutral-600 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/70 hover:text-neutral-900"
+          className={`${buttonClassName("noticeAction")} h-7 px-2 text-[12px]`}
         >
           Edit
         </button>

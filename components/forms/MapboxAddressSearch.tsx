@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui-primitives/input";
-import { Button } from "@/components/ui-primitives/button";
+import { Button, buttonClassName } from "@/components/ui-primitives/button";
 import { SoftNotice } from "@/components/system/SoftNotice";
 
 type MapboxAddressSuggestion = {
@@ -153,7 +153,7 @@ export function MapboxAddressSearch({
               }
             }}
             placeholder="Search for an address"
-            className="h-[56px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40"
+            className="h-[56px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]"
           />
 
           {open && suggestions.length > 0 ? (
@@ -163,7 +163,7 @@ export function MapboxAddressSearch({
                   <li key={suggestion.id}>
                     <button
                       type="button"
-                      className="w-full rounded-xl px-3 py-2 text-left text-[13px] text-neutral-700 transition-colors duration-[160ms] hover:bg-neutral-100/70 hover:text-neutral-900"
+                      className={`${buttonClassName("menuItem")} h-auto py-2`}
                       onClick={() => {
                         onSelect(suggestion);
                         setOpen(false);

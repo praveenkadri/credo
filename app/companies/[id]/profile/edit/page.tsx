@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
-import { getCompanyProfile } from "@/lib/data/companies";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCompanyProfileForToken } from "@/lib/data/companies";
 import { SoftNotice } from "@/components/system/SoftNotice";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
 import { buttonClassName } from "@/components/ui-primitives/button";
+import { APP_LAYOUT } from "@/components/ui-shell/layout-constants";
+import { cn } from "@/lib/utils";
 
 function ProfileState({
   title,
@@ -31,9 +35,14 @@ function ProfileState({
 
 export default async function CompanyProfileEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
 
   try {
-    const profile = await getCompanyProfile(id);
+    const profile = await getCompanyProfileForToken(id, user.accessToken);
 
     if (!profile) {
       return (
@@ -47,17 +56,17 @@ export default async function CompanyProfileEditPage({ params }: { params: Promi
 
     return (
       <div className="w-full pb-12">
-        <div className="mx-auto mt-5 w-full max-w-[720px] shell-enter">
+        <div className={cn("mx-auto mt-5 w-full shell-enter", APP_LAYOUT.focusedContentMaxWidth)}>
           <Link
             href={`/companies/${id}/profile`}
             className={buttonClassName("secondary")}
           >
-            ← Back
+            <span aria-hidden="true">←</span> Back
           </Link>
 
-          <h1 className="mt-6 text-[34px] font-semibold tracking-[-0.04em] text-[#1f221c]">Edit company profile</h1>
-          <p className="mt-2 max-w-[640px] text-[14px] leading-[1.5] text-neutral-600">
-            Update company information, tax details, and authorization settings.
+          <h1 className="mt-6 text-[34px] font-semibold tracking-[-0.04em] text-[#1f221c]">Update company details</h1>
+          <p className={cn("mt-2 text-[14px] leading-[1.5] text-neutral-600", APP_LAYOUT.focusedDescriptionMaxWidth)}>
+            Keep company information accurate for payroll and documents.
           </p>
 
           <div className="mt-8">

@@ -8,7 +8,6 @@ import { deleteCompanyAction, type DeleteCompanyActionState } from "@/app/compan
 import type { CompanyDeleteSummary } from "@/lib/data/companies";
 import { SoftNotice } from "@/components/system/SoftNotice";
 import { SuccessToast } from "@/components/system/SuccessToast";
-import { supabase } from "@/lib/supabase/client";
 import { Button, buttonClassName } from "@/components/ui-primitives/button";
 import { useContent } from "@/lib/useContent";
 import { routes } from "@/lib/routes";
@@ -22,7 +21,7 @@ function DeleteButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="primary" disabled={disabled || pending}>
+    <Button type="submit" variant="destructive" disabled={disabled || pending}>
       {pending ? c.company.delete.deleting : c.company.delete.deleteButton}
     </Button>
   );
@@ -37,7 +36,6 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
   const [reason, setReason] = useState("");
   const [reasonNote, setReasonNote] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [sessionAccessToken, setSessionAccessToken] = useState("");
   const [localError, setLocalError] = useState("");
   const [showDeletedToast, setShowDeletedToast] = useState(false);
   const reasons = [
@@ -48,25 +46,6 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
     c.company.delete.reasons.testingData,
     c.company.delete.reasons.other,
   ] as const;
-
-  useEffect(() => {
-    let active = true;
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!active) return;
-        setSessionAccessToken(data.session?.access_token ?? "");
-      })
-      .catch(() => {
-        if (!active) return;
-        setSessionAccessToken("");
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!state.success) return;
@@ -91,14 +70,14 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
       <SuccessToast message={showDeletedToast ? c.company.delete.successToast : undefined} />
       {step === "reason" ? (
         <>
-          <h1 className="text-[40px] font-semibold tracking-[-0.04em] text-[#1f221c]">
+          <h1 className="type-page-title text-[#1f221c] md:text-[40px]">
             {c.company.delete.reasonStepTitle}
           </h1>
           <p className="mt-2 max-w-[680px] text-[15px] leading-[1.55] text-neutral-600">
             {c.company.delete.reasonStepSubtitle}
           </p>
 
-          <section className="mt-8 rounded-[28px] bg-white/70 p-7 ring-1 ring-neutral-200/40 shadow-[0_10px_28px_rgba(15,23,42,0.03)] md:p-8">
+          <section className="mt-8 rounded-[28px] bg-[#fafaf7] p-7 shadow-[0_1px_1px_rgba(31,34,28,0.02)] md:p-8">
             <label className="block">
               <span className="mb-2 block text-[12px] font-medium uppercase tracking-[0.08em] text-neutral-500">
                 {c.company.delete.reasonLabel}
@@ -106,7 +85,7 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
               <select
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
-                className="h-[52px] w-full rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40"
+                className="h-[52px] w-full rounded-2xl bg-[#fafaf7] px-4 text-[14px] text-[#575b55] transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]"
               >
                 <option value="">{c.company.delete.reasonSelectPlaceholder}</option>
                 {reasons.map((value) => (
@@ -126,7 +105,7 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
                   value={reasonNote}
                   onChange={(event) => setReasonNote(event.target.value)}
                   placeholder={c.company.delete.reasonOtherPlaceholder}
-                  className="h-[52px] w-full rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] placeholder:text-[#93988f] ring-1 ring-neutral-200/60 transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40"
+                  className="h-[52px] w-full rounded-2xl bg-[#fafaf7] px-4 text-[14px] text-[#575b55] placeholder:text-[#93988f] transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]"
                 />
               </label>
             ) : null}
@@ -155,7 +134,7 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
         </>
       ) : (
         <>
-          <h1 className="text-[40px] font-semibold tracking-[-0.04em] text-[#1f221c]">
+          <h1 className="type-page-title text-[#1f221c] md:text-[40px]">
             {c.company.delete.title}
           </h1>
           <p className="mt-2 max-w-[680px] text-[15px] leading-[1.55] text-neutral-600">
@@ -164,13 +143,12 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
 
           <form
             action={formAction}
-            className="mt-8 rounded-[28px] bg-white/70 p-7 ring-1 ring-neutral-200/40 shadow-[0_10px_28px_rgba(15,23,42,0.03)] md:p-8"
+            className="mt-8 rounded-[28px] bg-[#fafaf7] p-7 shadow-[0_1px_1px_rgba(31,34,28,0.02)] md:p-8"
           >
-            <input type="hidden" name="sessionAccessToken" value={sessionAccessToken} />
             <input type="hidden" name="deleteReason" value={reason} />
             <input type="hidden" name="deleteReasonNote" value={reasonNote} />
 
-            <div className="rounded-2xl bg-white/65 p-4 ring-1 ring-neutral-200/50">
+            <div className="rounded-2xl bg-[#f3f4ef] p-4">
               <p className="text-[15px] font-semibold text-[#1f221c]">{summary.name}</p>
               <p className="mt-1 text-[13px] text-neutral-600">
                 {summary.employeeCount} {c.company.delete.summaryEmployees}
@@ -189,13 +167,13 @@ export function CompanyDeleteFlow({ summary }: { summary: CompanyDeleteSummary }
               </div>
             </div>
 
-            <label className="mt-5 flex items-start gap-2 rounded-xl bg-neutral-50/70 px-3 py-2.5 text-[13px] text-neutral-700 ring-1 ring-neutral-200/60">
+            <label className="mt-5 flex items-start gap-2 rounded-xl bg-[#f3f4ef] px-3 py-2.5 text-[13px] text-neutral-700">
               <input
                 type="checkbox"
                 name="confirmDelete"
                 checked={confirmed}
                 onChange={(event) => setConfirmed(event.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-neutral-300"
+                className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
               />
               <span>{c.company.delete.confirmCheckbox}</span>
             </label>

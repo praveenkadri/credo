@@ -11,6 +11,7 @@ export function AttentionBanner({
   exiting = false,
   onDismiss,
   actionLabel = "View",
+  actionStyle = "filled",
   actionHref,
 }: {
   message: string;
@@ -18,11 +19,12 @@ export function AttentionBanner({
   exiting?: boolean;
   onDismiss: () => void;
   actionLabel?: string;
+  actionStyle?: "filled" | "text";
   actionHref?: string;
 }) {
   const [lead, rest] = message.split("·").map((part) => part.trim());
-  const variantByBannerVariant: Record<BannerVariant, "info" | "warning" | "error"> = {
-    neutral: "info",
+  const variantByBannerVariant: Record<BannerVariant, "info" | "brand" | "warning" | "error"> = {
+    neutral: "brand",
     attention: "warning",
     critical: "error",
   };
@@ -34,13 +36,14 @@ export function AttentionBanner({
       variant={variantByBannerVariant[variant]}
       onDismiss={onDismiss}
       actionLabel={actionLabel}
+      actionStyle={actionStyle}
       onAction={!actionHref ? () => undefined : undefined}
       actionHref={actionHref}
       dismissLabel="Dismiss attention banner"
       className={[
-        "banner-enter",
+        "banner-enter mt-4 shadow-none",
         motionClass.bannerLifecycle,
-        exiting ? "mb-0 max-h-0 -translate-y-1 opacity-0 py-0" : "mb-3 max-h-14 translate-y-0 opacity-100",
+        exiting ? "mb-0 max-h-0 -translate-y-1 opacity-0 py-0" : "mb-4 max-h-14 translate-y-0 opacity-100",
       ].join(" ")}
     />
   );

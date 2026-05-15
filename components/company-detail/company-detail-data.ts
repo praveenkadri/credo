@@ -1,5 +1,4 @@
 import { statePillToneMap } from "@/components/overview/overview-data";
-import { routes } from "@/lib/routes";
 
 export type CompanyHealth = "Healthy" | "Needs review" | "Funding due";
 
@@ -10,6 +9,7 @@ export type CompanyDetail = {
   avatarTone: string;
   status: CompanyHealth;
   statusPillTone: string;
+  employeeCount: number;
   subtitle: string;
   primaryValue: string;
   primaryLabel: string;
@@ -44,12 +44,14 @@ export type RightRailAction = {
   id: string;
   label: string;
   icon: "person" | "invoice" | "upload" | "report" | "approve" | "settings";
+  href?: string;
 };
 
 export type DirectDepositField = {
   id: string;
   label: string;
   value: string;
+  displayValue?: string;
 };
 
 const defaultCompanyDetail: CompanyDetail = {
@@ -59,6 +61,7 @@ const defaultCompanyDetail: CompanyDetail = {
   avatarTone: "bg-neutral-100/70",
   status: "Healthy",
   statusPillTone: statePillToneMap.Healthy,
+  employeeCount: 94,
   subtitle: "Payroll account · 94 employees",
   primaryValue: "$128,430.00",
   primaryLabel: "Next payroll prepared",
@@ -129,20 +132,6 @@ const defaultActivityGroups: CompanyActivityGroupData[] = [
   },
 ];
 
-const defaultQuickActions: CompanyQuickAction[] = [
-  { id: "add-invoice", label: "Add invoice", icon: "plus" },
-  { id: "run-payroll", label: "Run payroll", icon: "run", href: routes.runPayroll },
-];
-
-const defaultRightRailActions: RightRailAction[] = [
-  { id: "add-employee", label: "Add employee", icon: "person" },
-  { id: "create-invoice", label: "Create invoice", icon: "invoice" },
-  { id: "upload-document", label: "Upload document", icon: "upload" },
-  { id: "generate-report", label: "Generate report", icon: "report" },
-  { id: "review-approvals", label: "Review approvals", icon: "approve" },
-  { id: "company-settings", label: "Company settings", icon: "settings" },
-];
-
 const defaultDirectDepositFields: DirectDepositField[] = [
   { id: "bin", label: "BIN number", value: "001234" },
   { id: "payroll", label: "Payroll number", value: "RP0001" },
@@ -166,8 +155,6 @@ export function getCompanyDetailPageData(id: string) {
   return {
     companyDetail,
     activityGroups: defaultActivityGroups,
-    quickActions: defaultQuickActions,
-    rightRailActions: defaultRightRailActions,
     directDepositFields: defaultDirectDepositFields,
   };
 }

@@ -2,46 +2,47 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { motionClass } from "@/components/ui/motion";
 import { CompanyIcon } from "@/components/company-detail/company-detail-icons";
 import type { CompanyActivityItem } from "@/components/company-detail/company-detail-data";
 
+const activityToneClass: Record<string, string> = {
+  payroll: "bg-[var(--credo-bronze-soft)] text-[var(--credo-green-950)]",
+  invoice: "bg-[var(--credo-bronze-pale)] text-[var(--credo-bronze-700)]",
+  tax: "bg-[var(--credo-taupe-wash)] text-[var(--credo-muted-strong)]",
+  compliance: "bg-[var(--credo-bronze-pale)] text-[var(--credo-bronze-700)]",
+  document: "bg-[var(--credo-taupe-wash)] text-[var(--credo-muted-strong)]",
+};
+
 export function CompanyActivityRow({ item }: { item: CompanyActivityItem }) {
   const [expanded, setExpanded] = useState(false);
+  const toneClass = activityToneClass[item.icon] ?? "bg-[var(--credo-taupe-wash)] text-[var(--credo-muted-strong)]";
 
   return (
     <button
       type="button"
       onClick={() => setExpanded((value) => !value)}
       className={cn(
-        "group relative w-full text-left",
-        "grid gap-3 px-4 py-3.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-5",
-        "transition-all duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)]",
-        "hover:-translate-y-[1px] hover:bg-white/72 hover:shadow-[0_10px_28px_rgba(15,23,42,0.06)] active:translate-y-0 active:scale-[0.995] active:duration-[90ms]",
-        "focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(31,34,28,0.08)]",
-        "motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100",
-        "rounded-[24px] bg-white/50 ring-1 ring-neutral-200/40",
-        motionClass.standard
+        "group relative grid h-auto w-full gap-3 rounded-none bg-transparent px-4 py-4 text-left transition duration-200 hover:bg-[rgba(184,135,79,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--action-ring)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-5"
       )}
     >
       <div className="flex min-w-0 items-start gap-3.5">
-        <CompanyIcon name={item.icon} className="mt-0.5" />
+        <CompanyIcon name={item.icon} className={cn("mt-0.5 size-8 rounded-full [&_svg]:size-3.5", toneClass)} />
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-medium tracking-[-0.01em] text-[#242721] transition-colors duration-200 group-hover:text-neutral-900">
+          <p className="type-body-strong truncate text-[var(--text-primary)] transition-colors duration-200">
             {item.title}
           </p>
-          <p className="mt-1 truncate text-[13px] text-neutral-600 transition-colors duration-200 group-hover:text-neutral-700">
+          <p className="type-body-small mt-1 truncate text-neutral-500 transition-colors duration-200">
             {item.subtitle}
           </p>
           {expanded && item.expandedNote ? (
-            <p className="mt-1.5 text-[12px] text-neutral-500">{item.expandedNote}</p>
+            <p className="type-caption mt-2 text-neutral-500">{item.expandedNote}</p>
           ) : null}
         </div>
       </div>
 
       <div className="text-left md:text-right">
-        <p className="text-[15px] font-medium tracking-[-0.01em] text-[#1f221c]">{item.rightPrimary}</p>
-        {item.rightSecondary ? <p className="mt-0.5 text-[12px] text-neutral-500">{item.rightSecondary}</p> : null}
+        <p className="type-body-strong text-[var(--text-primary)]">{item.rightPrimary}</p>
+        {item.rightSecondary ? <p className="type-caption mt-0.5 text-neutral-500">{item.rightSecondary}</p> : null}
       </div>
     </button>
   );

@@ -30,7 +30,7 @@ export function StatBlock({
         {trailing}
       </div>
       {helper ? <p className="text-[13px] leading-6 text-[#6e736b]">{helper}</p> : null}
-      {badgeText ? <Badge className="bg-[#dfeee3] text-[#159947]">{badgeText}</Badge> : null}
+      {badgeText ? <Badge className="bg-[var(--brand-primary-soft)] text-[var(--brand-primary)]">{badgeText}</Badge> : null}
     </div>
   );
 }

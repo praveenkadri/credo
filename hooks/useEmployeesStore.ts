@@ -2,74 +2,65 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  EMPLOYEE_STORAGE_KEY,
   getSeedEmployees,
   normalizeEmployeeRecord,
   type EmployeeRecord,
 } from "@/lib/data/employees";
 
-export function useEmployeesStore() {
-  const [employees, setEmployees] = useState<EmployeeRecord[]>(() => getSeedEmployees());
+export function useEmployeesStore(initialEmployees?: EmployeeRecord[], companyId?: string) {
+  const [employees, setEmployees] = useState<EmployeeRecord[]>(() =>
+    (initialEmployees ?? []).map((employee) => normalizeEmployeeRecord(employee))
+  );
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (initialEmployees) {
+      setEmployees(initialEmployees.map((employee) => normalizeEmployeeRecord(employee)));
+      setReady(true);
+      return;
+    }
 
-    try {
-      const raw = window.localStorage.getItem(EMPLOYEE_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as EmployeeRecord[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setEmployees(parsed.map((employee) => normalizeEmployeeRecord(employee)));
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (companyId) params.set("companyId", companyId);
+
+    async function loadEmployees() {
+      try {
+        const response = await fetch(`/api/employees${params.size ? `?${params.toString()}` : ""}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Employee request failed with ${response.status}`);
+        }
+
+        const payload = (await response.json()) as { employees?: EmployeeRecord[] };
+        setEmployees((payload.employees ?? []).map((employee) => normalizeEmployeeRecord(employee)));
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to load Supabase employees; using demo fallback.", error);
+          // Dev/demo fallback only. Must stay disabled in production.
+          setEmployees(getSeedEmployees());
+        } else {
+          setEmployees([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setReady(true);
         }
       }
-    } catch {}
+    }
 
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready || typeof window === "undefined") return;
-    window.localStorage.setItem(EMPLOYEE_STORAGE_KEY, JSON.stringify(employees));
-  }, [employees, ready]);
+    loadEmployees();
+    return () => controller.abort();
+  }, [companyId, initialEmployees]);
 
   const activeEmployees = useMemo(() => employees.filter((employee) => employee.status === "active"), [employees]);
-
-  function saveEmployee(nextEmployee: EmployeeRecord) {
-    const normalizedEmployee = normalizeEmployeeRecord(nextEmployee);
-
-    setEmployees((current) => {
-      const existingIndex = current.findIndex((employee) => employee.id === normalizedEmployee.id);
-      if (existingIndex === -1) {
-        return [...current, normalizedEmployee];
-      }
-
-      return current.map((employee) => (employee.id === normalizedEmployee.id ? normalizedEmployee : employee));
-    });
-  }
-
-  function deactivateEmployee(employeeId: string) {
-    setEmployees((current) =>
-      current.map((employee) =>
-        employee.id === employeeId
-          ? {
-              ...employee,
-              status: "inactive",
-              payrollSettings: {
-                ...employee.payrollSettings,
-                defaultInPayroll: false,
-              },
-            }
-          : employee
-      )
-    );
-  }
 
   return {
     employees,
     activeEmployees,
     ready,
-    saveEmployee,
-    deactivateEmployee,
   };
 }

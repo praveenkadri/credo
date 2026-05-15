@@ -4,21 +4,25 @@ import {
   stateToneMap,
 } from "@/components/overview/overview-data";
 import { getCompanyDetailPageData, type CompanyDetail } from "@/components/company-detail/company-detail-data";
-import { createClient } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
-import { supabase } from "@/lib/supabase/client";
+import {
+  SIGN_IN_REQUIRED_MESSAGE,
+  createSupabaseClientForToken,
+  requireAuthenticatedSupabaseClient,
+  toSafeSupabaseErrorMessage,
+} from "@/lib/supabase/client";
+import { sanitizeAuditDetails } from "@/lib/audit/sanitize";
 
 const SUPABASE_TABLES = {
   companies: "companies",
   employees: "employees",
   payrollRuns: "payroll_runs",
+  documents: "documents",
   auditLogs: "audit_logs",
   companyDeletionAudit: "company_deletion_audit",
 } as const;
 
 const STORAGE_BUCKET_CANDIDATES = ["company-assets", "assets", "uploads"];
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const COMPANY_OPTIONAL_IDENTITY_COLUMNS = [
   "user_id",
   "workspace_id",
@@ -71,6 +75,7 @@ interface SupabaseCompanyRow {
   hst_number?: string | null;
   bin_number?: string | null;
   business_number?: string | null;
+  created_at?: string | null;
   updated_at: string;
   plan_override: string | null;
   setup_completed_at?: string | null;
@@ -160,9 +165,6 @@ export type CompanyProfileInput = {
   addressHasSubpremise?: boolean;
   latitude?: string;
   longitude?: string;
-  sessionAccessToken?: string;
-  sessionUserId?: string;
-  sessionWorkspaceId?: string;
   hstNumber?: string;
   payrollNumber?: string;
   binNumber?: string;
@@ -190,6 +192,12 @@ export type CompanySetupPrimaryPrompt = {
 export type CompanySetupPromptResult = {
   primaryPrompt?: CompanySetupPrimaryPrompt;
   prompts: CompanySetupPrimaryPrompt[];
+};
+
+export type CompanyWorkspaceSummary = {
+  employeeCount: number;
+  payrollRunCount: number;
+  documentCount: number;
 };
 
 export type CompanyCompleteness = {
@@ -336,6 +344,14 @@ function hasContent(value: string | null | undefined) {
   return Boolean(value && value.trim());
 }
 
+function normalizeCompanyMatchText(value: string | null | undefined) {
+  const normalized = (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+  return normalized || null;
+}
+
 type SupabaseErrorLike = {
   message: string;
   code?: string;
@@ -389,6 +405,24 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
   const combined = `${message} ${details}`;
 
   if (
+    error.code === "23505" &&
+    (combined.includes("duplicate company") ||
+      combined.includes("already exists") ||
+      combined.includes("business number") ||
+      combined.includes("payroll number") ||
+      combined.includes("hst number"))
+  ) {
+    return new CompanyCreateError({
+      message: `Failed to create company: ${error.message}`,
+      userMessage:
+        "A company with matching legal details already exists in this workspace. Review the company name, tax IDs, and payroll number and try again.",
+      code: error.code,
+      hint: error.hint,
+      field: "legalName",
+    });
+  }
+
+  if (
     error.code === "42501" ||
     combined.includes("row-level security") ||
     combined.includes("permission denied") ||
@@ -398,7 +432,6 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
       message: `Failed to create company: ${error.message}`,
       userMessage: "Create is blocked by database access policy. Run the Credo RLS script and try again.",
       code: error.code,
-      details: error.details,
       hint: error.hint,
     });
   }
@@ -415,7 +448,6 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
         message: `Failed to create company: ${error.message}`,
         userMessage: "We couldn’t verify your workspace. Please sign in again and try creating the company.",
         code: error.code,
-        details: error.details,
         hint: error.hint,
       });
     }
@@ -425,7 +457,6 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
         message: `Failed to create company: ${error.message}`,
         userMessage: "Company name is missing. Add it and try again.",
         code: error.code,
-        details: error.details,
         hint: error.hint,
         field: "companyName",
       });
@@ -441,7 +472,6 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
         message: `Failed to create company: ${error.message}`,
         userMessage: "Address is required. Add the address and try again.",
         code: error.code,
-        details: error.details,
         hint: error.hint,
         field: "address",
       });
@@ -452,7 +482,6 @@ function mapCreateCompanyInsertError(error: SupabaseErrorLike) {
     message: `Failed to create company: ${error.message}`,
     userMessage: "Database insert failed. Check required company fields and try again.",
     code: error.code,
-    details: error.details,
     hint: error.hint,
   });
 }
@@ -462,35 +491,19 @@ function isPlanOverrideConstraintError(error: SupabaseErrorLike) {
   return error.code === "23514" && combined.includes("plan_override_check");
 }
 
-function createSupabaseClientForToken(accessToken: string) {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new CompanyCreateError({
-      message: "Missing Supabase environment variables",
-      userMessage: "We couldn’t verify your workspace. Please sign in again and try creating the company.",
-    });
-  }
-
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
-function createSupabaseClientForCreate(accessToken?: string) {
-  const token = accessToken?.trim() ?? "";
-  if (!token) {
-    return supabase;
-  }
-
-  return createSupabaseClientForToken(token);
-}
+type DuplicateCheckCompanyRow = {
+  id: string;
+  name: string;
+  legal_name?: string | null;
+  city?: string | null;
+  province?: string | null;
+  payroll_account_number?: string | null;
+  hst_number?: string | null;
+  business_number?: string | null;
+  workspace_id?: string | null;
+  organization_id?: string | null;
+  deleted_at?: string | null;
+};
 
 async function getCompanyIdentityColumns(client: ReturnType<typeof createSupabaseClientForToken>) {
   if (cachedCompanyIdentityColumns) {
@@ -552,6 +565,97 @@ async function getCompanySoftDeleteColumns(client: ReturnType<typeof createSupab
   return availableColumns;
 }
 
+async function assertNoDuplicateCompany(
+  client: ReturnType<typeof createSupabaseClientForToken>,
+  input: CompanyProfileInput,
+  options: {
+    resolvedWorkspaceId: string;
+    identityColumns: Set<string>;
+    profileColumns: Set<string>;
+    softDeleteColumns: Set<string>;
+  }
+) {
+  const columns = ["id", "name", "city", "province", "payroll_account_number"];
+
+  if (options.profileColumns.has("legal_name")) columns.push("legal_name");
+  if (options.profileColumns.has("hst_number")) columns.push("hst_number");
+  if (options.profileColumns.has("business_number")) columns.push("business_number");
+  if (options.identityColumns.has("workspace_id")) columns.push("workspace_id");
+  if (options.identityColumns.has("organization_id")) columns.push("organization_id");
+  if (options.softDeleteColumns.has("deleted_at")) columns.push("deleted_at");
+
+  let query = client.from(SUPABASE_TABLES.companies).select(columns.join(","));
+  if (options.softDeleteColumns.has("deleted_at")) {
+    query = query.is("deleted_at", null);
+  }
+
+  const { data, error } = await query.limit(500);
+
+  if (error) {
+    return;
+  }
+
+  const rows = (((data as unknown) as DuplicateCheckCompanyRow[] | null) ?? []).filter((row) => {
+    if (!options.softDeleteColumns.has("deleted_at")) return true;
+    return !row.deleted_at;
+  });
+
+  const nextScope = options.resolvedWorkspaceId.trim();
+  const nextBusinessNumber = normalizeCompanyMatchText(input.businessNumber);
+  const nextPayrollNumber = normalizeCompanyMatchText(input.payrollNumber);
+  const nextHstNumber = normalizeCompanyMatchText(input.hstNumber);
+  const nextLegalName = normalizeCompanyMatchText(input.legalName || input.companyName);
+  const nextCity = normalizeCompanyMatchText(input.city);
+  const nextProvince = normalizeCompanyMatchText(input.provinceState);
+
+  const scopedRows = rows.filter((row) => {
+    if (!nextScope) return true;
+
+    const rowScope = String(row.workspace_id ?? row.organization_id ?? "").trim();
+    return rowScope ? rowScope === nextScope : true;
+  });
+
+  const duplicate =
+    scopedRows.find((row) => {
+      const rowBusinessNumber = normalizeCompanyMatchText(row.business_number);
+      return nextBusinessNumber && rowBusinessNumber === nextBusinessNumber;
+    }) ??
+    scopedRows.find((row) => {
+      const rowPayrollNumber = normalizeCompanyMatchText(row.payroll_account_number);
+      return nextPayrollNumber && rowPayrollNumber === nextPayrollNumber;
+    }) ??
+    scopedRows.find((row) => {
+      const rowHstNumber = normalizeCompanyMatchText(row.hst_number);
+      return nextHstNumber && rowHstNumber === nextHstNumber;
+    }) ??
+    scopedRows.find((row) => {
+      if (nextBusinessNumber || nextPayrollNumber || nextHstNumber) return false;
+
+      const rowLegalName = normalizeCompanyMatchText(row.legal_name ?? row.name);
+      const rowCity = normalizeCompanyMatchText(row.city);
+      const rowProvince = normalizeCompanyMatchText(row.province);
+
+      return Boolean(
+        nextLegalName &&
+          nextCity &&
+          nextProvince &&
+          rowLegalName === nextLegalName &&
+          rowCity === nextCity &&
+          rowProvince === nextProvince
+      );
+    });
+
+  if (duplicate) {
+    throw new CompanyCreateError({
+      message: `Duplicate company detected before insert: ${duplicate.name}`,
+      userMessage:
+        "A company with matching legal details already exists in this workspace. Review the company name, tax IDs, and payroll number and try again.",
+      code: "23505",
+      field: "legalName",
+    });
+  }
+}
+
 export function getMissingCompanyDetails(company: CompanyProfile): MissingCompanyDetailsCategory[] {
   const missing: MissingCompanyDetailsCategory[] = [];
 
@@ -583,6 +687,10 @@ export function getMissingCompanyDetails(company: CompanyProfile): MissingCompan
   if (profileIncomplete) missing.push("company_profile");
 
   return missing;
+}
+
+export function hasCompletePayrollDetails(company: CompanyProfile) {
+  return !getMissingCompanyDetails(company).includes("tax_details");
 }
 
 export function getCompanySetupPrompts(company: CompanyProfile): CompanySetupPromptResult {
@@ -641,7 +749,12 @@ export function getCompanyCompleteness(company: CompanyProfile): CompanyComplete
   };
 }
 
-async function uploadCompanyAsset(companyId: string, file: File | null | undefined, kind: "logo" | "signature") {
+async function uploadCompanyAsset(
+  client: ReturnType<typeof createSupabaseClientForToken>,
+  companyId: string,
+  file: File | null | undefined,
+  kind: "logo" | "signature"
+) {
   if (!file || file.size === 0) {
     return null;
   }
@@ -651,12 +764,12 @@ async function uploadCompanyAsset(companyId: string, file: File | null | undefin
 
   for (const bucket of STORAGE_BUCKET_CANDIDATES) {
     try {
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+      const { error: uploadError } = await client.storage.from(bucket).upload(path, file, { upsert: true });
       if (uploadError) {
         continue;
       }
 
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      const { data } = client.storage.from(bucket).getPublicUrl(path);
       if (data?.publicUrl) {
         return data.publicUrl;
       }
@@ -669,23 +782,36 @@ async function uploadCompanyAsset(companyId: string, file: File | null | undefin
   return null;
 }
 
-export async function uploadCompanyLogo(companyId: string, file: File | null | undefined) {
-  return uploadCompanyAsset(companyId, file, "logo");
+export async function uploadCompanyLogo(
+  companyId: string,
+  file: File | null | undefined,
+  sessionAccessToken?: string
+) {
+  return uploadCompanyAsset(requireAuthenticatedSupabaseClient(sessionAccessToken), companyId, file, "logo");
 }
 
-export async function uploadDirectorSignature(companyId: string, file: File | null | undefined) {
-  return uploadCompanyAsset(companyId, file, "signature");
+export async function uploadDirectorSignature(
+  companyId: string,
+  file: File | null | undefined,
+  sessionAccessToken?: string
+) {
+  return uploadCompanyAsset(requireAuthenticatedSupabaseClient(sessionAccessToken), companyId, file, "signature");
 }
 
 export async function getCompanies(): Promise<OverviewCompany[]> {
+  return getCompaniesForToken();
+}
+
+export async function getCompaniesForToken(accessToken?: string): Promise<OverviewCompany[]> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let companiesQuery = supabase
+  let companiesQuery = client
     .from(SUPABASE_TABLES.companies)
-    .select("id,name,payroll_account_number,updated_at")
+    .select("id,name,payroll_account_number,created_at,updated_at")
     .order("name", { ascending: true });
 
   if (hasDeletedAtColumn) {
@@ -698,8 +824,8 @@ export async function getCompanies(): Promise<OverviewCompany[]> {
     { data: runsData, error: runsError },
   ] = await Promise.all([
     companiesQuery,
-    supabase.from(SUPABASE_TABLES.employees).select("company_id"),
-    supabase
+    client.from(SUPABASE_TABLES.employees).select("company_id"),
+    client
       .from(SUPABASE_TABLES.payrollRuns)
       .select("company_id,total,run_status,saved_at")
       .order("saved_at", { ascending: false }),
@@ -741,18 +867,24 @@ export async function getCompanies(): Promise<OverviewCompany[]> {
         : "No activity yet",
       payrollAmount: formatCurrency(latestRun?.total),
       employeeCount,
+      createdAt: company.created_at ?? company.updated_at,
       href: routes.company(company.id),
     };
   });
 }
 
 export async function hasActiveCompanies(): Promise<boolean> {
+  return hasActiveCompaniesForToken();
+}
+
+export async function hasActiveCompaniesForToken(accessToken?: string): Promise<boolean> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let query = supabase.from(SUPABASE_TABLES.companies).select("id", { count: "exact", head: true });
+  let query = client.from(SUPABASE_TABLES.companies).select("id", { count: "exact", head: true });
 
   if (hasDeletedAtColumn) {
     query = query.is("deleted_at", null);
@@ -768,17 +900,22 @@ export async function hasActiveCompanies(): Promise<boolean> {
 }
 
 export async function getDashboardActivityState(): Promise<DashboardActivityState> {
+  return getDashboardActivityStateForToken();
+}
+
+export async function getDashboardActivityStateForToken(accessToken?: string): Promise<DashboardActivityState> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let companiesCountQuery = supabase.from(SUPABASE_TABLES.companies).select("id", { count: "exact", head: true });
+  let companiesCountQuery = client.from(SUPABASE_TABLES.companies).select("id", { count: "exact", head: true });
   let activeCompanyIds: string[] = [];
 
   if (hasDeletedAtColumn) {
     companiesCountQuery = companiesCountQuery.is("deleted_at", null);
-    const { data: activeCompanies, error: activeCompaniesError } = await supabase
+    const { data: activeCompanies, error: activeCompaniesError } = await client
       .from(SUPABASE_TABLES.companies)
       .select("id")
       .is("deleted_at", null);
@@ -790,7 +927,7 @@ export async function getDashboardActivityState(): Promise<DashboardActivityStat
     activeCompanyIds = ((activeCompanies as { id: string }[] | null) ?? []).map((company) => company.id);
   }
 
-  let payrollCountQuery = supabase.from(SUPABASE_TABLES.payrollRuns).select("id", { count: "exact", head: true });
+  let payrollCountQuery = client.from(SUPABASE_TABLES.payrollRuns).select("id", { count: "exact", head: true });
   if (hasDeletedAtColumn) {
     if (!activeCompanyIds.length) {
       payrollCountQuery = payrollCountQuery.eq("company_id", "__none__");
@@ -811,7 +948,7 @@ export async function getDashboardActivityState(): Promise<DashboardActivityStat
   }
 
   let auditCount = 0;
-  let auditCountQuery = supabase.from(SUPABASE_TABLES.auditLogs).select("id", { count: "exact", head: true });
+  let auditCountQuery = client.from(SUPABASE_TABLES.auditLogs).select("id", { count: "exact", head: true });
   if (hasDeletedAtColumn) {
     if (!activeCompanyIds.length) {
       auditCountQuery = auditCountQuery.eq("company_id", "__none__");
@@ -832,12 +969,17 @@ export async function getDashboardActivityState(): Promise<DashboardActivityStat
 }
 
 export async function getCompanyById(id: string): Promise<CompanyDetail | null> {
+  return getCompanyByIdForToken(id);
+}
+
+export async function getCompanyByIdForToken(id: string, accessToken?: string): Promise<CompanyDetail | null> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let companyQuery = supabase
+  let companyQuery = client
     .from(SUPABASE_TABLES.companies)
     .select("id,name,payroll_account_number,updated_at")
     .eq("id", id);
@@ -852,11 +994,11 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
     { data: latestRunRows, error: latestRunError },
   ] = await Promise.all([
     companyQuery.maybeSingle(),
-    supabase
+    client
       .from(SUPABASE_TABLES.employees)
       .select("id", { count: "exact", head: true })
       .eq("company_id", id),
-    supabase
+    client
       .from(SUPABASE_TABLES.payrollRuns)
       .select("company_id,total,run_status,saved_at")
       .eq("company_id", id)
@@ -897,6 +1039,7 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
     avatarTone: "bg-neutral-100/70",
     status: healthState,
     statusPillTone: statePillToneMap[healthState],
+    employeeCount: employeeCount ?? 0,
     subtitle: `Payroll account · ${employeeCount ?? 0} employees`,
     primaryValue: formatCurrency(latestRun?.total),
     primaryLabel: latestRun ? "Latest payroll run" : "No payroll runs yet",
@@ -907,13 +1050,54 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
   };
 }
 
+export async function getCompanyWorkspaceSummaryForToken(
+  id: string,
+  accessToken?: string
+): Promise<CompanyWorkspaceSummary> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
+
+  const [
+    { count: employeeCount, error: employeeError },
+    { count: payrollRunCount, error: payrollError },
+    { count: documentCount, error: documentError },
+  ] = await Promise.all([
+    client.from(SUPABASE_TABLES.employees).select("id", { count: "exact", head: true }).eq("company_id", id),
+    client.from(SUPABASE_TABLES.payrollRuns).select("id", { count: "exact", head: true }).eq("company_id", id),
+    client.from(SUPABASE_TABLES.documents).select("id", { count: "exact", head: true }).eq("company_id", id),
+  ]);
+
+  const firstError = employeeError ?? payrollError ?? documentError;
+  if (firstError) {
+    throw new Error(`Failed to load workspace summary for company ${id}: ${toSafeSupabaseErrorMessage(firstError)}`);
+  }
+
+  return {
+    employeeCount: employeeCount ?? 0,
+    payrollRunCount: payrollRunCount ?? 0,
+    documentCount: documentCount ?? 0,
+  };
+}
+
 export async function getCompanyProfile(id: string): Promise<CompanyProfile | null> {
+  return getCompanyProfileForToken(id);
+}
+
+export async function getCompanyProfileForToken(id: string, accessToken?: string): Promise<CompanyProfile | null> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
+
+  return getCompanyProfileWithClient(client, id);
+}
+
+async function getCompanyProfileWithClient(
+  client: ReturnType<typeof createSupabaseClientForToken>,
+  id: string
+): Promise<CompanyProfile | null> {
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let profileQuery = supabase
+  let profileQuery = client
     .from(SUPABASE_TABLES.companies)
     .select(
       "id,name,address,address_line2,city,province,postal_code,logo_url,director_name,director_title,signature_url,payroll_account_number,plan_override,setup_completed_at"
@@ -963,12 +1147,20 @@ export async function getCompanyProfile(id: string): Promise<CompanyProfile | nu
 }
 
 export async function getCompanyDeleteSummary(id: string): Promise<CompanyDeleteSummary | null> {
+  return getCompanyDeleteSummaryForToken(id);
+}
+
+export async function getCompanyDeleteSummaryForToken(
+  id: string,
+  accessToken?: string
+): Promise<CompanyDeleteSummary | null> {
+  const client = requireAuthenticatedSupabaseClient(accessToken);
   const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
+    client
   );
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let companyQuery = supabase
+  let companyQuery = client
     .from(SUPABASE_TABLES.companies)
     .select("id,name,payroll_account_number,hst_number,bin_number,business_number")
     .eq("id", id);
@@ -980,7 +1172,7 @@ export async function getCompanyDeleteSummary(id: string): Promise<CompanyDelete
   const [{ data: companyData, error: companyError }, { count: employeeCount, error: employeeCountError }] =
     await Promise.all([
       companyQuery.maybeSingle(),
-      supabase.from(SUPABASE_TABLES.employees).select("id", { count: "exact", head: true }).eq("company_id", id),
+      client.from(SUPABASE_TABLES.employees).select("id", { count: "exact", head: true }).eq("company_id", id),
     ]);
 
   if (companyError) {
@@ -1007,11 +1199,11 @@ export async function getCompanyDeleteSummary(id: string): Promise<CompanyDelete
   };
 }
 
-export async function createCompany(input: CompanyProfileInput): Promise<{ id: string | null }> {
+export async function createCompany(input: CompanyProfileInput, accessToken: string): Promise<{ id: string | null }> {
   const companyName = input.companyName.trim();
   const legalName = input.legalName.trim();
   const streetAddress = input.streetAddress?.trim() ?? "";
-  const sessionAccessToken = input.sessionAccessToken?.trim() ?? "";
+  const sessionAccessToken = accessToken.trim();
 
   if (!companyName) {
     throw new CompanyCreateError({
@@ -1037,33 +1229,40 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
     });
   }
 
-  const writeClient = createSupabaseClientForCreate(sessionAccessToken);
-  let authUserId = "";
-  let appMeta: Record<string, unknown> = {};
-  let userMeta: Record<string, unknown> = {};
-  let authUserError: { code?: string; message?: string } | null = null;
-
-  if (sessionAccessToken) {
-    const { data, error } = await writeClient.auth.getUser();
-    authUserError = error ? { code: error.code, message: error.message } : null;
-    authUserId = data.user?.id ?? "";
-    appMeta = (data.user?.app_metadata as Record<string, unknown> | undefined) ?? {};
-    userMeta = (data.user?.user_metadata as Record<string, unknown> | undefined) ?? {};
-
-    if (error && process.env.NODE_ENV !== "production") {
-      console.error("createCompany auth lookup failed", {
-        error,
-      });
-    }
+  let writeClient: ReturnType<typeof createSupabaseClientForToken>;
+  try {
+    writeClient = requireAuthenticatedSupabaseClient(sessionAccessToken);
+  } catch {
+    throw new CompanyCreateError({
+      message: "Missing authenticated Supabase session",
+      userMessage: SIGN_IN_REQUIRED_MESSAGE,
+    });
   }
 
-  const sessionUserId = input.sessionUserId?.trim() || authUserId;
+  let appMeta: Record<string, unknown> = {};
+  let userMeta: Record<string, unknown> = {};
+
+  const { data: authData, error: authError } = await writeClient.auth.getUser();
+  const authUserId = authData.user?.id ?? "";
+  if (authError || !authUserId) {
+    if (authError && process.env.NODE_ENV !== "production") {
+      console.error("createCompany auth lookup failed", { error: authError });
+    }
+
+    throw new CompanyCreateError({
+      message: authError?.message ?? "Missing authenticated Supabase user",
+      userMessage: SIGN_IN_REQUIRED_MESSAGE,
+    });
+  }
+
+  appMeta = (authData.user?.app_metadata as Record<string, unknown> | undefined) ?? {};
+  userMeta = (authData.user?.user_metadata as Record<string, unknown> | undefined) ?? {};
 
   const now = new Date().toISOString();
   const id = slugifyCompanyId(companyName);
 
-  const logoUrl = (await uploadCompanyLogo(id, input.logoFile)) ?? "";
-  const signatureUrl = (await uploadDirectorSignature(id, input.signatureFile)) ?? "";
+  const logoUrl = (await uploadCompanyAsset(writeClient, id, input.logoFile, "logo")) ?? "";
+  const signatureUrl = (await uploadCompanyAsset(writeClient, id, input.signatureFile, "signature")) ?? "";
 
   const meta: CompanyProfileMeta = {
     legalName,
@@ -1084,8 +1283,16 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
   const identityColumns = await getCompanyIdentityColumns(writeClient);
   const profileColumns = await getCompanyProfileColumns(writeClient);
   const resolvedWorkspaceId =
-    input.sessionWorkspaceId?.trim() ||
     String(appMeta.workspace_id ?? userMeta.workspace_id ?? appMeta.organization_id ?? userMeta.organization_id ?? "");
+
+  const softDeleteColumns = await getCompanySoftDeleteColumns(writeClient);
+
+  await assertNoDuplicateCompany(writeClient, input, {
+    resolvedWorkspaceId,
+    identityColumns,
+    profileColumns,
+    softDeleteColumns,
+  });
 
   const insertPayload: Record<string, unknown> = {
     id,
@@ -1145,16 +1352,16 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
     insertPayload.plan_override = serializePlanOverride(meta);
   }
 
-  if (identityColumns.has("user_id") && sessionUserId) {
-    insertPayload.user_id = sessionUserId;
+  if (identityColumns.has("user_id") && authUserId) {
+    insertPayload.user_id = authUserId;
   }
 
-  if (identityColumns.has("owner_id") && sessionUserId) {
-    insertPayload.owner_id = sessionUserId;
+  if (identityColumns.has("owner_id") && authUserId) {
+    insertPayload.owner_id = authUserId;
   }
 
-  if (identityColumns.has("created_by") && sessionUserId) {
-    insertPayload.created_by = sessionUserId;
+  if (identityColumns.has("created_by") && authUserId) {
+    insertPayload.created_by = authUserId;
   }
 
   if (identityColumns.has("workspace_id") && resolvedWorkspaceId) {
@@ -1169,10 +1376,9 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
     console.error("createCompany identity fields", {
       optionalColumnsAvailable: Array.from(identityColumns),
       profileColumnsAvailable: Array.from(profileColumns),
-      sessionUserId,
-      sessionWorkspaceId: resolvedWorkspaceId || null,
+      authUserId,
+      authWorkspaceId: resolvedWorkspaceId || null,
       hasAccessToken: Boolean(sessionAccessToken),
-      authLookupError: authUserError,
     });
   }
 
@@ -1187,7 +1393,7 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
       console.error("createCompany retrying without plan_override due to legacy constraint", {
         code: error.code,
         message: error.message,
-        details: error.details,
+        hint: error.hint,
       });
     }
 
@@ -1207,10 +1413,8 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
       console.error("createCompany insert failed", {
         code: error.code,
         message: error.message,
-        details: error.details,
         hint: error.hint,
-        payload: insertPayload,
-        resolvedSessionUserId: sessionUserId,
+        resolvedAuthUserId: authUserId,
         resolvedWorkspaceId: resolvedWorkspaceId || null,
       });
     }
@@ -1221,11 +1425,8 @@ export async function createCompany(input: CompanyProfileInput): Promise<{ id: s
   return { id: (data as { id: string } | null)?.id ?? id };
 }
 
-export async function updateCompany(id: string, input: CompanyProfileInput): Promise<{ id: string }> {
-  const existing = await getCompanyProfile(id);
-  if (!existing) {
-    throw new Error("Company not found");
-  }
+export async function updateCompany(id: string, input: CompanyProfileInput, accessToken: string): Promise<{ id: string }> {
+  const writeClient = requireAuthenticatedSupabaseClient(accessToken);
 
   const companyName = input.companyName.trim();
   const legalName = input.legalName.trim();
@@ -1238,8 +1439,13 @@ export async function updateCompany(id: string, input: CompanyProfileInput): Pro
     throw new Error("Legal name is required");
   }
 
-  const logoUpload = await uploadCompanyLogo(id, input.logoFile);
-  const signatureUpload = await uploadDirectorSignature(id, input.signatureFile);
+  const existing = await getCompanyProfileWithClient(writeClient, id);
+  if (!existing) {
+    throw new Error("Company not found");
+  }
+
+  const logoUpload = await uploadCompanyAsset(writeClient, id, input.logoFile, "logo");
+  const signatureUpload = await uploadCompanyAsset(writeClient, id, input.signatureFile, "signature");
 
   const meta: CompanyProfileMeta = {
     legalName,
@@ -1252,7 +1458,7 @@ export async function updateCompany(id: string, input: CompanyProfileInput): Pro
     fiscalYearEnd: input.fiscalYearEnd?.trim() || "",
   };
 
-  const profileColumns = await getCompanyProfileColumns(supabase as ReturnType<typeof createSupabaseClientForToken>);
+  const profileColumns = await getCompanyProfileColumns(writeClient);
   const updatePayload: Record<string, unknown> = {
     name: companyName,
     address: input.streetAddress?.trim() || null,
@@ -1307,12 +1513,10 @@ export async function updateCompany(id: string, input: CompanyProfileInput): Pro
     updatePayload.plan_override = serializePlanOverride(meta);
   }
 
-  const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
-  );
+  const softDeleteColumns = await getCompanySoftDeleteColumns(writeClient);
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let updateQuery = supabase.from(SUPABASE_TABLES.companies).update(updatePayload).eq("id", id);
+  let updateQuery = writeClient.from(SUPABASE_TABLES.companies).update(updatePayload).eq("id", id);
   if (hasDeletedAtColumn) {
     updateQuery = updateQuery.is("deleted_at", null);
   }
@@ -1322,7 +1526,7 @@ export async function updateCompany(id: string, input: CompanyProfileInput): Pro
   if (error && isPlanOverrideConstraintError(error)) {
     const retryPayload = { ...updatePayload };
     delete retryPayload.plan_override;
-    let retryQuery = supabase.from(SUPABASE_TABLES.companies).update(retryPayload).eq("id", id);
+    let retryQuery = writeClient.from(SUPABASE_TABLES.companies).update(retryPayload).eq("id", id);
     if (hasDeletedAtColumn) {
       retryQuery = retryQuery.is("deleted_at", null);
     }
@@ -1331,21 +1535,20 @@ export async function updateCompany(id: string, input: CompanyProfileInput): Pro
   }
 
   if (error) {
-    throw new Error(`Failed to update company ${id}: ${error.message}`);
+    throw new Error(`Failed to update company ${id}: ${toSafeSupabaseErrorMessage(error)}`);
   }
 
   return { id };
 }
 
-export async function confirmCompany(id: string): Promise<{ id: string }> {
+export async function confirmCompany(id: string, sessionAccessToken: string): Promise<{ id: string }> {
+  const writeClient = requireAuthenticatedSupabaseClient(sessionAccessToken);
   const now = new Date().toISOString();
 
-  const softDeleteColumns = await getCompanySoftDeleteColumns(
-    supabase as ReturnType<typeof createSupabaseClientForToken>
-  );
+  const softDeleteColumns = await getCompanySoftDeleteColumns(writeClient);
   const hasDeletedAtColumn = softDeleteColumns.has("deleted_at");
 
-  let confirmQuery = supabase
+  let confirmQuery = writeClient
     .from(SUPABASE_TABLES.companies)
     .update({ setup_completed_at: now, updated_at: now })
     .eq("id", id);
@@ -1359,7 +1562,7 @@ export async function confirmCompany(id: string): Promise<{ id: string }> {
   }
 
   if (error.message.toLowerCase().includes("setup_completed_at")) {
-    let fallbackQuery = supabase
+    let fallbackQuery = writeClient
       .from(SUPABASE_TABLES.companies)
       .update({ updated_at: now })
       .eq("id", id);
@@ -1372,10 +1575,10 @@ export async function confirmCompany(id: string): Promise<{ id: string }> {
       return { id };
     }
 
-    throw new Error(`Failed to confirm company ${id}: ${fallbackError.message}`);
+    throw new Error(`Failed to confirm company ${id}: ${toSafeSupabaseErrorMessage(fallbackError)}`);
   }
 
-  throw new Error(`Failed to confirm company ${id}: ${error.message}`);
+  throw new Error(`Failed to confirm company ${id}: ${toSafeSupabaseErrorMessage(error)}`);
 }
 
 export async function softDeleteCompany({
@@ -1456,12 +1659,19 @@ export async function softDeleteCompany({
     deleted_at: deletedAt,
     reason,
     reason_note: reasonNote?.trim() || null,
-    company_snapshot: company,
+    company_snapshot: sanitizeAuditDetails({
+      id: company.id,
+      name: company.name,
+      owner_id: company.owner_id,
+      user_id: company.user_id,
+      created_by: company.created_by,
+      deleted_at: company.deleted_at,
+    }),
     related_counts: relatedCounts,
   });
 
   if (auditInsertError) {
-    throw new Error(`Failed to write delete audit for company ${companyId}: ${auditInsertError.message}`);
+    throw new Error(`Failed to write delete audit for company ${companyId}: ${toSafeSupabaseErrorMessage(auditInsertError)}`);
   }
 
   const { error: companyUpdateError } = await writeClient
@@ -1476,7 +1686,7 @@ export async function softDeleteCompany({
     .eq("id", companyId);
 
   if (companyUpdateError) {
-    throw new Error(`Failed to delete company ${companyId}: ${companyUpdateError.message}`);
+    throw new Error(`Failed to delete company ${companyId}: ${toSafeSupabaseErrorMessage(companyUpdateError)}`);
   }
 
   const { count: remainingCompanies, error: remainingError } = await writeClient
@@ -1486,7 +1696,7 @@ export async function softDeleteCompany({
     .or(`owner_id.eq.${authUserId},user_id.eq.${authUserId},created_by.eq.${authUserId}`);
 
   if (remainingError) {
-    throw new Error(`Failed to check remaining companies: ${remainingError.message}`);
+    throw new Error(`Failed to check remaining companies: ${toSafeSupabaseErrorMessage(remainingError)}`);
   }
 
   return {

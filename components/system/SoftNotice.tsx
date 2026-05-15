@@ -1,19 +1,22 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { surfaceClass } from "@/components/ui/surface";
+import { buttonClassName } from "@/components/ui-primitives/button";
 
-export type SoftNoticeVariant = "info" | "warning" | "error";
+export type SoftNoticeVariant = "info" | "warning" | "brand" | "error";
 
 const NOTICE_STYLES: Record<SoftNoticeVariant, string> = {
-  info: "border border-neutral-200/60 bg-neutral-100/70 text-neutral-800",
-  warning: "border border-amber-100/60 bg-amber-50/60 text-neutral-800",
-  error: "border border-amber-200/60 bg-amber-50/55 text-neutral-800",
+  info: "bg-[var(--credo-cream-muted)] text-[var(--credo-ink)]",
+  warning: "bg-[var(--credo-bronze-pale)] text-[var(--credo-ink)] ring-1 ring-[var(--credo-taupe-strong)]",
+  brand: "bg-[var(--credo-bronze-pale)] text-[var(--credo-ink)] ring-1 ring-[rgba(216,203,185,0.82)]",
+  error: "bg-[#f6eceb] text-neutral-800",
 };
 
 const ACCENT_STYLES: Record<SoftNoticeVariant, string> = {
-  info: "before:bg-neutral-400/55",
-  warning: "before:bg-amber-400/60",
-  error: "before:bg-amber-500/55",
+  info: "before:bg-[var(--credo-green-800)]/75",
+  warning: "before:bg-[var(--credo-bronze)]",
+  brand: "before:bg-[var(--credo-bronze)]",
+  error: "before:bg-red-600/70",
 };
 
 export function SoftNotice({
@@ -26,6 +29,7 @@ export function SoftNotice({
   onDismiss,
   dismissLabel = "Dismiss notice",
   className,
+  actionStyle = "filled",
 }: {
   title: string;
   description?: string;
@@ -36,11 +40,18 @@ export function SoftNotice({
   onDismiss?: () => void;
   dismissLabel?: string;
   className?: string;
+  actionStyle?: "filled" | "text";
 }) {
+  const renderedActionLabel = actionStyle === "text" ? `${actionLabel} →` : actionLabel;
+  const actionClassName =
+    actionStyle === "text"
+      ? "inline-flex h-[26px] items-center justify-center rounded-[8px] px-1 text-[13px] font-semibold leading-none text-[var(--credo-green-800)] transition-colors duration-[160ms] hover:text-[var(--credo-green-950)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(21,90,67,0.18)]"
+      : `${buttonClassName("noticeAction")} h-[26px] rounded-[10px] px-3 text-[13px]`;
+
   return (
     <div
       className={cn(
-        "relative flex w-full items-center justify-between overflow-hidden px-3.5 py-2.5 before:absolute before:left-3 before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-full",
+        "relative flex w-full items-center justify-between overflow-hidden px-4 py-2.5 before:absolute before:left-4 before:top-1/2 before:h-5 before:w-[2px] before:-translate-y-1/2 before:rounded-full",
         surfaceClass("subtleBanner"),
         NOTICE_STYLES[variant],
         ACCENT_STYLES[variant],
@@ -49,9 +60,9 @@ export function SoftNotice({
       role={variant === "error" ? "alert" : "status"}
       aria-live="polite"
     >
-      <p className="pl-3 text-[12px] tracking-[-0.005em] text-neutral-800">
-        <span className="font-medium text-neutral-900">{title}</span>
-        {description ? <span className="text-neutral-600"> · {description}</span> : null}
+      <p className="pl-4 text-[12px] leading-[1.35] text-[var(--credo-ink)]">
+        <span className="font-semibold text-[var(--credo-ink)]">{title}</span>
+        {description ? <span className="text-[var(--credo-muted)]"> · {description}</span> : null}
       </p>
       {actionLabel || onDismiss ? (
         <div className="ml-4 flex items-center gap-2">
@@ -59,17 +70,17 @@ export function SoftNotice({
             actionHref ? (
               <Link
                 href={actionHref}
-                className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-neutral-600 transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/55 hover:text-neutral-900"
+                className={actionClassName}
               >
-                {actionLabel}
+                {renderedActionLabel}
               </Link>
             ) : (
               <button
                 type="button"
                 onClick={onAction}
-                className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-neutral-600 transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/55 hover:text-neutral-900"
+                className={actionClassName}
               >
-                {actionLabel}
+                {renderedActionLabel}
               </button>
             )
           ) : null}
@@ -78,9 +89,9 @@ export function SoftNotice({
               type="button"
               aria-label={dismissLabel}
               onClick={onDismiss}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[13px] text-neutral-400 opacity-70 transition-[color,opacity] duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white/55 hover:text-neutral-600 hover:opacity-100"
+              className={`${buttonClassName("noticeDismiss")} size-7 text-[13px] opacity-70 hover:opacity-100`}
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
           ) : null}
         </div>

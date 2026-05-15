@@ -1,10 +1,15 @@
-import { ComingSoonPage } from "@/components/ui-shell/coming-soon-page";
+import { EmployeeListPage } from "@/components/employees/employee-list-page";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { listEmployeesForToken } from "@/lib/data/employees";
 
-export default function TeamPage() {
-  return (
-    <ComingSoonPage
-      title="Team"
-      description="Manage team members, permissions, and payroll access in one place."
-    />
-  );
+export default async function TeamPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
+
+  const employees = await listEmployeesForToken(undefined, user.accessToken);
+  return <EmployeeListPage employees={employees} />;
 }

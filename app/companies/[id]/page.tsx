@@ -1,9 +1,17 @@
 import { CompanyDetailPage } from "@/components/company-detail/company-detail-page";
-import { getCompanyById } from "@/lib/data/companies";
-import { getCompanyActivity } from "@/lib/data/company-activity";
+import {
+  getCompanyByIdForToken,
+  getCompanyProfileForToken,
+  getCompanySetupPrompts,
+  getCompanyWorkspaceSummaryForToken,
+  hasCompletePayrollDetails,
+} from "@/lib/data/companies";
+import { getCompanyActivityForToken } from "@/lib/data/company-activity";
 import Link from "next/link";
 import { SoftNotice } from "@/components/system/SoftNotice";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
 import { buttonClassName } from "@/components/ui-primitives/button";
+import { getCurrentUser } from "@/lib/auth/session";
 
 function CompanyState({
   title,
@@ -39,9 +47,19 @@ export default async function CompanyPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
 
   try {
-    const [company, activityGroups] = await Promise.all([getCompanyById(id), getCompanyActivity(id)]);
+    const [company, activityGroups, profile, workspaceSummary] = await Promise.all([
+      getCompanyByIdForToken(id, user.accessToken),
+      getCompanyActivityForToken(id, user.accessToken),
+      getCompanyProfileForToken(id, user.accessToken),
+      getCompanyWorkspaceSummaryForToken(id, user.accessToken),
+    ]);
 
     if (!company) {
       return (
@@ -64,6 +82,9 @@ export default async function CompanyPage({
       <CompanyDetailPage
         company={company}
         activityGroups={activityGroups}
+        setupPrompt={profile ? getCompanySetupPrompts(profile).primaryPrompt : undefined}
+        payrollDetailsComplete={profile ? hasCompletePayrollDetails(profile) : false}
+        workspaceSummary={workspaceSummary}
         successToastMessage={successToastMessage}
         clearCreateCompanyDraft={query.created === "1"}
       />

@@ -1,0 +1,45 @@
+:root {
+  /* Shell */
+  --credo-shell: #F2F1ED;
+  --credo-panel: #FFFFFF;
+  --credo-surface: #F8F7F4;
+  --credo-inset: #F3F2EE;
+
+  /* Ink */
+  --credo-ink: #151713;
+  --credo-ink-soft: #34362F;
+  --credo-muted: #74776F;
+  --credo-faint: #A7AAA2;
+
+  /* Brand */
+  --credo-green: #0B5A3D;
+  --credo-green-hover: #084A33;
+  --credo-green-soft: #EDF5EF;
+  --credo-green-wash: #F5FAF6;
+  --credo-green-border: rgba(11, 90, 61, 0.16);
+  --credo-green-ring: rgba(11, 90, 61, 0.22);
+
+  /* Status */
+  --credo-success: #0B5A3D;
+  --credo-warning: #E88916;
+  --credo-danger: #C9332A;
+  --credo-info: #496A8F;
+
+  /* Borders */
+  --credo-border-soft: rgba(21, 23, 19, 0.08);
+  --credo-border-medium: rgba(21, 23, 19, 0.12);
+
+  /* Shadows */
+  --credo-shadow-soft: 0 18px 48px rgba(21, 23, 19, 0.08);
+  --credo-shadow-panel: 0 10px 28px rgba(21, 23, 19, 0.06);
+  --credo-shadow-micro: 0 4px 14px rgba(21, 23, 19, 0.05);
+
+  /* Type */
+  --text-nav: 13px;
+  --text-micro: 10.5px;
+  --text-body: 13px;
+  --text-body-lg: 15px;
+  --text-section: 17px;
+  --text-page-title: 34px;
+  --text-kpi: 56px;
+}

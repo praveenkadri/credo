@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CompanyCreateError, createCompany } from "@/lib/data/companies";
+import { requireCurrentUser } from "@/lib/auth/session";
 import { isNextRedirectError } from "@/lib/is-next-redirect-error";
+import { sanitizeForDeveloperLog } from "@/lib/audit/sanitize";
 import { routes } from "@/lib/routes";
 import { en } from "@/content/en";
 
@@ -55,9 +57,6 @@ export async function createCompanySetupAction(
   const latitude = String(formData.get("latitude") ?? "").trim();
   const longitude = String(formData.get("longitude") ?? "").trim();
   const formattedAddress = String(formData.get("formattedAddress") ?? "").trim();
-  const sessionAccessToken = String(formData.get("sessionAccessToken") ?? "").trim();
-  const sessionUserId = String(formData.get("sessionUserId") ?? "").trim();
-  const sessionWorkspaceId = String(formData.get("sessionWorkspaceId") ?? "").trim();
 
   const logoFileValue = formData.get("logoFile");
   const signatureFileValue = formData.get("signatureFile");
@@ -67,36 +66,37 @@ export async function createCompanySetupAction(
     signatureFileValue instanceof File && signatureFileValue.size > 0 ? signatureFileValue : null;
 
   try {
-    const { id } = await createCompany({
-      companyName,
-      legalName,
-      sameAsCompanyName,
-      establishedDate: String(formData.get("establishedDate") ?? "").trim(),
-      logoFile,
-      streetAddress,
-      unitSuite: String(formData.get("unitSuite") ?? "").trim(),
-      city: String(formData.get("city") ?? "").trim(),
-      provinceState: String(formData.get("provinceState") ?? "").trim(),
-      postalCode: String(formData.get("postalCode") ?? "").trim(),
-      country: String(formData.get("country") ?? "").trim(),
-      formattedAddress,
-      addressSource,
-      addressVerified,
-      addressHasSubpremise,
-      latitude,
-      longitude,
-      sessionAccessToken,
-      sessionUserId,
-      sessionWorkspaceId,
-      hstNumber: String(formData.get("hstNumber") ?? "").trim(),
-      payrollNumber: String(formData.get("payrollNumber") ?? "").trim(),
-      binNumber: String(formData.get("binNumber") ?? "").trim(),
-      businessNumber: String(formData.get("businessNumber") ?? "").trim(),
-      fiscalYearEnd: String(formData.get("fiscalYearEnd") ?? "").trim(),
-      directorName: String(formData.get("directorName") ?? "").trim(),
-      directorTitle: String(formData.get("directorTitle") ?? "").trim(),
-      signatureFile,
-    });
+    const user = await requireCurrentUser();
+    const { id } = await createCompany(
+      {
+        companyName,
+        legalName,
+        sameAsCompanyName,
+        establishedDate: String(formData.get("establishedDate") ?? "").trim(),
+        logoFile,
+        streetAddress,
+        unitSuite: String(formData.get("unitSuite") ?? "").trim(),
+        city: String(formData.get("city") ?? "").trim(),
+        provinceState: String(formData.get("provinceState") ?? "").trim(),
+        postalCode: String(formData.get("postalCode") ?? "").trim(),
+        country: String(formData.get("country") ?? "").trim(),
+        formattedAddress,
+        addressSource,
+        addressVerified,
+        addressHasSubpremise,
+        latitude,
+        longitude,
+        hstNumber: String(formData.get("hstNumber") ?? "").trim(),
+        payrollNumber: String(formData.get("payrollNumber") ?? "").trim(),
+        binNumber: String(formData.get("binNumber") ?? "").trim(),
+        businessNumber: String(formData.get("businessNumber") ?? "").trim(),
+        fiscalYearEnd: String(formData.get("fiscalYearEnd") ?? "").trim(),
+        directorName: String(formData.get("directorName") ?? "").trim(),
+        directorTitle: String(formData.get("directorTitle") ?? "").trim(),
+        signatureFile,
+      },
+      user.accessToken
+    );
 
     revalidatePath("/");
 
@@ -136,7 +136,7 @@ export async function createCompanySetupAction(
     }
 
     if (process.env.NODE_ENV !== "production") {
-      console.error("createCompanySetupAction failed", error);
+      console.error("createCompanySetupAction failed", sanitizeForDeveloperLog(error));
     }
 
     return {

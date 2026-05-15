@@ -1,3 +1,4 @@
+import type * as React from "react";
 import type { CompanySetupStep } from "@/components/companies/setup/types";
 import { Button } from "@/components/ui-primitives/button";
 import { useContent } from "@/lib/useContent";
@@ -12,6 +13,7 @@ export function CompanySetupStepHeader({
   contextLabel,
   onBack,
   showStepLabel = true,
+  stepIcon,
 }: {
   step: CompanySetupStep;
   totalSteps?: number;
@@ -22,6 +24,7 @@ export function CompanySetupStepHeader({
   contextLabel?: string;
   onBack?: () => void;
   showStepLabel?: boolean;
+  stepIcon?: React.ReactNode;
 }) {
   const c = useContent();
   const isFirstStep = step === 1;
@@ -33,7 +36,7 @@ export function CompanySetupStepHeader({
     <div className="mb-4">
       {!isFirstStep ? (
         <Button type="button" variant="secondary" onClick={onBack} className="mb-4">
-          ← {c.common.back}
+          <span aria-hidden="true">←</span> {c.common.back}
         </Button>
       ) : null}
       {brandLabel ? (
@@ -47,7 +50,10 @@ export function CompanySetupStepHeader({
           {stepLabel}
         </p>
       ) : null}
-      <h1 className="type-page-title mt-2">{title}</h1>
+      <div className="mt-2 flex items-center gap-3">
+        {stepIcon}
+        <h1 className="type-page-title">{title}</h1>
+      </div>
       {subtitle ? <p className="type-body mt-2 max-w-[640px] text-neutral-600">{subtitle}</p> : null}
       {reassurance ? <p className="type-body-small mt-2 text-neutral-500">{reassurance}</p> : null}
     </div>

@@ -23,22 +23,28 @@ export type PayrollFilters = {
 export type PayrollRunRecord = {
   id: string;
   payPeriod: string;
+  payPeriodStart?: string;
+  payPeriodEnd?: string;
   status: Exclude<PayrollStatusFilterId, "all">;
   statusLabel: string;
   employeesCount: number;
   totalAmount: number;
-  companyId: Exclude<PayrollCompanyFilterId, "all">;
+  grossPay?: number;
+  deductions?: number;
+  netPay?: number;
+  companyId: string;
   companyLabel: string;
-  teamId: Exclude<PayrollTeamFilterId, "all">;
+  teamId: string;
   teamLabel: string;
-  employeeIds: Array<Exclude<PayrollEmployeeFilterId, "all">>;
+  employeeIds: string[];
   employeeSummary: string;
   payrollType: Exclude<PayrollTypeFilterId, "all">;
   payrollTypeLabel: string;
   payDate: string;
-  viewHref: string;
-  downloadHref: string;
-  downloadName: string;
+  submittedAt?: string;
+  viewHref?: string;
+  downloadHref?: string;
+  downloadName?: string;
 };
 
 const DEFAULT_FILTERS: PayrollFilters = {
@@ -76,6 +82,8 @@ export function createPayrollHref(filters: PayrollFilters, updates: Partial<Payr
   });
 }
 
+// Dev/demo fallback only. Never enable this as production workspace data.
+// Normal payroll pages receive Supabase runs from lib/data/payroll.
 export function getPayrollRuns(view: ReturnType<typeof useContent>["runPayroll"]): PayrollRunRecord[] {
   return [
     createRun({

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { buttonClassName } from "@/components/ui-primitives/button";
 import type { CompanyDetail } from "@/components/company-detail/company-detail-data";
 
 export function CompanyDetailHeader({ company }: { company: CompanyDetail }) {
@@ -9,7 +10,7 @@ export function CompanyDetailHeader({ company }: { company: CompanyDetail }) {
       <div className="flex items-start gap-4">
         <span
           className={cn(
-            "mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-medium tracking-[0.02em] text-neutral-600 ring-1 ring-neutral-200/60",
+            "type-body-small mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-medium text-neutral-600 ring-1 ring-neutral-200/60",
             company.avatarTone
           )}
         >
@@ -20,11 +21,11 @@ export function CompanyDetailHeader({ company }: { company: CompanyDetail }) {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="type-page-title inline-flex items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left transition-colors duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
+              className={`${buttonClassName("subtle")} type-page-title h-auto gap-1.5 px-1.5 py-0.5 text-left`}
               aria-label="Open company selector"
             >
               <span className="truncate">{company.name}</span>
-              <span className="type-card-title text-neutral-500">⌄</span>
+              <span className="type-card-title text-neutral-500" aria-hidden="true">⌄</span>
             </button>
 
             {showStatusPill ? (

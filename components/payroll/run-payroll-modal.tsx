@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui-primitives/button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { submitPayrollRunAction } from "@/app/payroll/actions";
+import { Button, buttonClassName } from "@/components/ui-primitives/button";
+import { EmptyStateVisual, StepIcon, type BrandIconName, type BrandTone } from "@/components/brand/brand-visuals";
 import { Input } from "@/components/ui-primitives/input";
 import { SoftNotice } from "@/components/system/SoftNotice";
-import { useEmployeesStore } from "@/hooks/useEmployeesStore";
 import { calculateGrossPay, calculatePayPeriodHours, parseDateOnly } from "@/lib/payroll-calculations";
 import { employeeCompensationSummary, type EmployeeRecord } from "@/lib/data/employees";
+import { routes } from "@/lib/routes";
 import { useContent } from "@/lib/useContent";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +39,20 @@ const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", cu
 export function RunPayrollModal({
   open,
   onClose,
+  companyId,
+  companyName,
+  employees,
+  hasCompanies,
 }: {
   open: boolean;
   onClose: () => void;
+  companyId?: string;
+  companyName?: string;
+  employees: EmployeeRecord[];
+  hasCompanies: boolean;
 }) {
+  const router = useRouter();
   const { runPayroll: c, common } = useContent();
-  const { employees } = useEmployeesStore();
   const initialSetup = useMemo<SetupState>(
     () => ({
       payPeriodId: c.fields.payPeriod.options[0]?.id ?? "",
@@ -57,10 +69,8 @@ export function RunPayrollModal({
   const [setup, setSetup] = useState<SetupState>(initialSetup);
   const [confirmed, setConfirmed] = useState(false);
   const [validation, setValidation] = useState("");
-  const payrollEmployees = useMemo(
-    () => employees.filter((employee) => employee.status === "active" && employee.payrollSettings.eligibleForPayroll),
-    [employees]
-  );
+  const [submitting, setSubmitting] = useState(false);
+  const payrollEmployees = employees;
   const defaultSelectedEmployees = useMemo(
     () => payrollEmployees.filter((employee) => employee.payrollSettings.defaultInPayroll).map((employee) => employee.id),
     [payrollEmployees]
@@ -84,6 +94,7 @@ export function RunPayrollModal({
     setSetup(initialSetup);
     setConfirmed(false);
     setValidation("");
+    setSubmitting(false);
     setSelectedEmployees(defaultSelectedEmployees);
     setEmployeeConfigs(buildEmployeeConfigs(payrollEmployees, initialSetup, c.fields.payPeriod.options));
   }, [c.fields.payPeriod.options, defaultSelectedEmployees, initialSetup, open, payrollEmployees]);
@@ -174,9 +185,49 @@ export function RunPayrollModal({
     setStep((current) => Math.min(3, current + 1) as WizardStep);
   }
 
-  function submitPayroll() {
+  async function submitPayroll() {
     if (!confirmed) {
       setValidation(c.validation.confirmationRequired);
+      return;
+    }
+
+    if (!companyId) {
+      setValidation("Choose a company before submitting payroll.");
+      return;
+    }
+
+    setSubmitting(true);
+    const result = await submitPayrollRunAction(
+      {
+        companyId,
+        payPeriodStart: resolvedStartDate,
+        payPeriodEnd: resolvedEndDate,
+        payDate: setup.payDate,
+        payrollType: setup.payrollType,
+        employees: selectedEmployeeRows.map((employee) => {
+          const config = employeeConfigs[employee.id];
+          return {
+            employeeId: employee.id,
+            employeeName: employee.name,
+            rateType: employee.compensation.rateType,
+            rateAmount: employee.compensation.rateAmount,
+            totalHours: parseNumeric(config?.totalHours),
+            manualHoursOverride: Boolean(config?.manualHoursOverride),
+          };
+        }),
+      }
+    );
+
+    setSubmitting(false);
+
+    if (result.error) {
+      setValidation(result.error);
+      return;
+    }
+
+    router.refresh();
+    if (result.warning) {
+      setValidation(result.warning);
       return;
     }
 
@@ -232,9 +283,9 @@ export function RunPayrollModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1f221c]/22 px-4 py-6 backdrop-blur-[6px] payroll-modal-overlay">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#f7f7f2]/78 px-4 py-5 backdrop-blur-[3px] backdrop-saturate-[0.92] payroll-modal-overlay md:items-center md:py-6">
       <section
-        className="max-h-[calc(100vh-48px)] w-full max-w-[860px] overflow-y-auto rounded-[32px] bg-white p-5 shadow-[0_26px_90px_rgba(31,34,28,0.18)] payroll-modal-surface md:p-7"
+        className="max-h-[calc(100vh-32px)] w-full max-w-[800px] overflow-y-auto rounded-[32px] bg-[#fafaf7] p-5 shadow-[0_18px_48px_rgba(31,34,28,0.11),0_0_0_1px_rgba(31,34,28,0.04)] payroll-modal-surface md:p-7"
         role="dialog"
         aria-modal="true"
         aria-labelledby="run-payroll-modal-title"
@@ -242,30 +293,35 @@ export function RunPayrollModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             {step > 0 ? (
-              <button
+              <Button
                 type="button"
                 onClick={goBack}
-                className="mb-3 text-[13px] font-medium text-[#6e736b] transition-colors hover:text-[#1f221c]"
+                variant="subtle"
+                className="mb-3 h-auto px-0 py-0 text-[13px]"
               >
                 {common.back}
-              </button>
+              </Button>
             ) : null}
             <p className="text-[13px] font-medium text-[#6e736b]">
               {c.steps.progress.replace("{step}", String(step + 1)).replace("{total}", String(stepIndexes.length))}
             </p>
-            <h2 id="run-payroll-modal-title" className="mt-2 text-[30px] font-semibold tracking-[-0.03em] text-[#1f221c]">
-              {c.steps.items[step].title}
-            </h2>
+            <div className="mt-2 flex items-center gap-3">
+              <StepIcon {...payrollStepVisual(step)} />
+              <h2 id="run-payroll-modal-title" className="text-[30px] font-semibold tracking-[-0.03em] text-[#1f221c]">
+                {c.steps.items[step].title}
+              </h2>
+            </div>
             <p className="mt-2 max-w-xl text-[15px] leading-6 text-[#6e736b]">{c.steps.items[step].subtitle}</p>
           </div>
-          <button
+          <Button
             type="button"
             onClick={closeWizard}
             aria-label={c.actions.close}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--action-primary-soft)] text-[22px] leading-none text-[var(--action-text)] transition-colors hover:bg-white hover:text-[var(--action-text)]"
+            variant="toolbarIcon"
+            className="shrink-0 text-[22px] leading-none"
           >
-            ×
-          </button>
+            <span aria-hidden="true">×</span>
+          </Button>
         </div>
 
         <div className="mt-6 flex gap-2">
@@ -286,6 +342,9 @@ export function RunPayrollModal({
           ) : step === 1 ? (
             <EmployeeRateSelectionStep
               content={c}
+              companyId={companyId}
+              companyName={companyName}
+              hasCompanies={hasCompanies}
               employees={payrollEmployees}
               allSelected={allSelected}
               selectedEmployees={selectedEmployees}
@@ -322,8 +381,8 @@ export function RunPayrollModal({
               {c.actions.continue}
             </Button>
           ) : (
-            <Button variant="primary" onClick={submitPayroll}>
-              {c.actions.submitPayroll}
+            <Button variant="primary" onClick={submitPayroll} disabled={submitting}>
+              {submitting ? "Submitting..." : c.actions.submitPayroll}
             </Button>
           )}
         </div>
@@ -343,6 +402,13 @@ function PayrollSetupStep({
   activePayPeriod?: RunPayrollContent["fields"]["payPeriod"]["options"][number];
   onUpdateSetup: <K extends keyof SetupState>(key: K, value: SetupState[K]) => void;
 }) {
+  const payPeriodLabel = setup.useCustomDates
+    ? formatDateRangeLabel(setup.customStartDate, setup.customEndDate)
+    : activePayPeriod
+      ? formatDateRangeLabel(activePayPeriod.startDate, activePayPeriod.endDate)
+      : "";
+  const payDateLabel = formatDateLabel(setup.payDate);
+
   return (
     <div className="grid gap-5">
       <Field label={c.fields.payPeriod.label} hint={c.microcopy.payPeriod}>
@@ -353,20 +419,43 @@ function PayrollSetupStep({
             </option>
           ))}
         </select>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Button
-            variant={setup.useCustomDates ? "chipActive" : "ghost"}
-            className="h-8 px-3 text-[12px]"
-            onClick={() => onUpdateSetup("useCustomDates", !setup.useCustomDates)}
-          >
-            {c.fields.useCustomDates}
-          </Button>
-          {!setup.useCustomDates && activePayPeriod ? <span className="text-[12px] text-[#6e736b]">{activePayPeriod.label}</span> : null}
+        <div className="mt-3 rounded-[22px] bg-[#f3f4ef] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[12px] text-[#6e736b]">{setup.useCustomDates ? c.fields.useCustomDates : "Selected period"}</p>
+              <p className="mt-1 text-[14px] font-semibold text-[#1f221c]">{payPeriodLabel || "Choose dates below"}</p>
+            </div>
+            <button
+              type="button"
+              aria-expanded={setup.useCustomDates}
+              onClick={() => onUpdateSetup("useCustomDates", !setup.useCustomDates)}
+              className={cn(
+                "inline-flex h-8 items-center gap-2 rounded-full px-3 text-[12px] font-medium transition-colors duration-[160ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#fafaf7]",
+                setup.useCustomDates ? "bg-[#fafaf7] text-[#1f221c] shadow-[inset_0_0_0_1px_rgba(31,34,28,0.05)]" : "text-[#6e736b]"
+              )}
+            >
+              <span
+                className={cn(
+                  "relative inline-flex h-4 w-7 rounded-full bg-neutral-200 transition-colors duration-[160ms]",
+                  setup.useCustomDates && "bg-[var(--action-primary)]"
+                )}
+                aria-hidden="true"
+              >
+                <span
+                  className={cn(
+                    "absolute left-0.5 top-0.5 size-3 rounded-full bg-white transition-transform duration-[160ms]",
+                    setup.useCustomDates && "translate-x-3"
+                  )}
+                />
+              </span>
+              {c.fields.useCustomDates}
+            </button>
+          </div>
         </div>
       </Field>
 
       {setup.useCustomDates ? (
-        <div className="rounded-[26px] bg-[#fafaf7] p-4 ring-1 ring-neutral-200/60">
+        <div className="rounded-[26px] bg-[#f3f4ef] p-4">
           <p className="text-[13px] leading-6 text-[#6e736b]">{c.fields.customDateHelper}</p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label={c.fields.startDate} hint={c.fields.customDateHelper}>
@@ -380,6 +469,10 @@ function PayrollSetupStep({
       ) : null}
 
       <Field label={c.fields.payDate.label} hint={c.microcopy.payDate}>
+        <div className="mb-2 rounded-[22px] bg-[#f3f4ef] px-4 py-3">
+          <p className="text-[12px] text-[#6e736b]">Selected pay date</p>
+          <p className="mt-1 text-[14px] font-semibold text-[#1f221c]">{payDateLabel || "Choose a pay date"}</p>
+        </div>
         <Input type="date" value={setup.payDate} onChange={(event) => onUpdateSetup("payDate", event.target.value)} />
       </Field>
 
@@ -398,6 +491,9 @@ function PayrollSetupStep({
 
 function EmployeeRateSelectionStep({
   content: c,
+  companyId,
+  companyName,
+  hasCompanies,
   employees,
   allSelected,
   selectedEmployees,
@@ -410,6 +506,9 @@ function EmployeeRateSelectionStep({
   onResetCalculatedHours,
 }: {
   content: RunPayrollContent;
+  companyId?: string;
+  companyName?: string;
+  hasCompanies: boolean;
   employees: readonly EmployeeRecord[];
   allSelected: boolean;
   selectedEmployees: string[];
@@ -421,6 +520,42 @@ function EmployeeRateSelectionStep({
   onSetManualHours: (employeeId: string, value: string) => void;
   onResetCalculatedHours: (employeeId: string) => void;
 }) {
+  if (!hasCompanies) {
+    return (
+      <div className="rounded-[26px] bg-[#f3f4ef] p-6 text-center">
+        <EmptyStateVisual type="company" className="mx-auto mb-3" />
+        <h3 className="text-[15px] font-semibold text-[#1f221c]">Create a company first</h3>
+        <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#6e736b]">
+          Add an active company before running payroll.
+        </p>
+        <div className="mt-5 flex justify-center">
+          <Link href={routes.companiesNew} className={buttonClassName("secondary")}>
+            Add company
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (employees.length === 0) {
+    return (
+      <div className="rounded-[26px] bg-[#f3f4ef] p-6 text-center">
+        <EmptyStateVisual type="employees" className="mx-auto mb-3" />
+        <h3 className="text-[15px] font-semibold text-[#1f221c]">Add an eligible Team member</h3>
+        <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#6e736b]">
+          {companyName ? `${companyName} has no active payroll-eligible employees yet.` : "This company has no active payroll-eligible employees yet."}
+        </p>
+        {companyId ? (
+          <div className="mt-5 flex justify-center">
+            <Link href={routes.employeesNewForCompany(companyId)} className={buttonClassName("secondary")}>
+              Add Team member
+            </Link>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-2">
@@ -431,7 +566,7 @@ function EmployeeRateSelectionStep({
         ))}
       </div>
 
-      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[22px] bg-[#fafaf7] px-4 py-3">
+      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[22px] bg-[#f3f4ef] px-4 py-3">
         <span>
           <span className="block text-[15px] font-semibold text-[#1f221c]">{c.fields.employees.allEmployees}</span>
           <span className="mt-1 block text-[13px] text-[#6e736b]">{c.microcopy.allEmployees}</span>
@@ -456,7 +591,7 @@ function EmployeeRateSelectionStep({
           });
 
           return (
-            <div key={employee.id} className="overflow-hidden rounded-[26px] bg-[#fafaf7]/85 ring-1 ring-neutral-200/60">
+            <div key={employee.id} className="overflow-hidden rounded-[26px] bg-[#f3f4ef]">
               <label className="flex cursor-pointer items-center justify-between gap-4 px-4 py-4">
                 <span>
                   <span className="block text-[15px] font-semibold text-[#1f221c]">{employee.name}</span>
@@ -474,7 +609,7 @@ function EmployeeRateSelectionStep({
                     <ProfileMeta label={c.fields.hoursPerWeek} value={String(employee.workSchedule.hoursPerWeek)} />
                   </div>
 
-                  <div className="mt-4 rounded-[22px] bg-white/60 p-4 ring-1 ring-neutral-200/55">
+                  <div className="mt-4 rounded-[22px] bg-[#fafaf7] p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                       <div className="min-w-0 flex-1">
                         <Field label={c.fields.totalHours} hint={c.microcopy.totalHours}>
@@ -483,12 +618,12 @@ function EmployeeRateSelectionStep({
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex h-8 items-center rounded-full bg-[var(--action-primary-muted)] px-3 text-[12px] font-medium text-[var(--action-text)]">
+                        <span className="inline-flex h-8 items-center rounded-full bg-[#f1f2ef] px-3 text-[12px] font-medium text-[var(--action-text)]">
                           {c.fields.calculatedHours}: {formatHours(parseNumeric(config.calculatedHours))}
                         </span>
                         {config.manualHoursOverride ? (
                           <>
-                            <span className="inline-flex h-8 items-center rounded-full bg-[#f5f5f1] px-3 text-[12px] font-medium text-[#6e736b]">
+                            <span className="inline-flex h-8 items-center rounded-full bg-[#f1f2ef] px-3 text-[12px] font-medium text-[#6e736b]">
                               {c.fields.manualHoursOverride}
                             </span>
                             <Button variant="ghost" className="h-8 px-3 text-[12px]" onClick={() => onResetCalculatedHours(employee.id)}>
@@ -536,7 +671,8 @@ function ReviewPayrollStep({
 }) {
   return (
     <div className="space-y-5">
-      <div className="rounded-[24px] bg-[#fafaf7]/75 p-4">
+      <EmptyStateVisual type="payroll" className="h-[96px]" />
+      <div className="rounded-[24px] bg-[#f3f4ef] p-4">
         <h3 className="text-[15px] font-semibold text-[#1f221c]">{c.timeline.items[0].title}</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <ReviewMeta label={c.fields.payPeriodStart} value={formatDateLabel(startDate)} />
@@ -545,11 +681,11 @@ function ReviewPayrollStep({
         </div>
       </div>
 
-      <div className="rounded-[24px] bg-[#fafaf7]/75 p-4">
+      <div className="rounded-[24px] bg-[#f3f4ef] p-4">
         <h3 className="text-[15px] font-semibold text-[#1f221c]">{c.summary.employeeTotals}</h3>
         <div className="mt-3 space-y-3">
           {selectedEmployeeSummaries.map(({ employee, config, totalHours, grossPay }) => (
-            <div key={employee.id} className="rounded-[20px] bg-white/60 p-4 ring-1 ring-neutral-200/55">
+            <div key={employee.id} className="rounded-[20px] bg-[#fafaf7] p-4">
               <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="text-[15px] font-semibold text-[#1f221c]">{employee.name}</p>
@@ -591,11 +727,11 @@ function ConfirmPayrollStep({
 }) {
   return (
     <div className="space-y-5">
-      <div className="rounded-[24px] bg-[#fafaf7]/75 p-4">
+      <div className="rounded-[24px] bg-[#f3f4ef] p-4">
         <h3 className="text-[15px] font-semibold text-[#1f221c]">{c.confirmation.title}</h3>
         <p className="mt-2 text-[14px] leading-6 text-[#6e736b]">{c.confirmation.auditNote}</p>
       </div>
-      <label className="flex cursor-pointer items-start gap-3 rounded-[22px] bg-[#fafaf7] p-4">
+      <label className="flex cursor-pointer items-start gap-3 rounded-[22px] bg-[#f3f4ef] p-4">
         <input type="checkbox" checked={confirmed} onChange={(event) => onConfirmChange(event.target.checked)} className="mt-0.5 size-5 accent-[var(--action-primary)]" />
         <span className="text-[14px] leading-6 text-[#1f221c]">{c.confirmation.checkbox}</span>
       </label>
@@ -624,11 +760,18 @@ function ReviewMeta({ label, value }: { label: string; value: string }) {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[22px] bg-[#fafaf7] p-4">
+    <div className="rounded-[22px] bg-[#f3f4ef] p-4">
       <p className="text-[12px] text-[#6e736b]">{label}</p>
       <p className="mt-2 text-[22px] font-semibold tracking-[-0.025em] text-[#1f221c]">{value}</p>
     </div>
   );
+}
+
+function payrollStepVisual(step: number): { icon: BrandIconName; tone: BrandTone } {
+  if (step === 0) return { icon: "payroll", tone: "sand" };
+  if (step === 1) return { icon: "person", tone: "sky" };
+  if (step === 2) return { icon: "check", tone: "olive" };
+  return { icon: "compliance", tone: "lavender" };
 }
 
 function ProfileMeta({ label, value }: { label: string; value: string }) {
@@ -766,6 +909,14 @@ function formatDateLabel(value: string) {
   }).format(parsed);
 }
 
+function formatDateRangeLabel(startDate: string, endDate: string) {
+  const start = formatDateLabel(startDate);
+  const end = formatDateLabel(endDate);
+
+  if (start && end) return `${start} - ${end}`;
+  return start || end;
+}
+
 function formatHours(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
@@ -781,4 +932,4 @@ function calculateEmployeeHours(employee: EmployeeRecord, startDate: string, end
 }
 
 const selectClassName =
-  "h-10 w-full rounded-xl bg-[#fafaf7] px-3 text-sm text-[#575b55] outline-none transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/60 focus:bg-neutral-100/60 focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-10 w-full rounded-xl bg-[#fafaf7] px-3 text-sm text-[#575b55] outline-none transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";

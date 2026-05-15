@@ -5,7 +5,7 @@ export function DirectDepositInfoCard({ fields }: { fields: DirectDepositField[]
   return (
     <div className="space-y-1">
       {fields.map((field) => (
-        <CopyableInfoRow key={field.id} label={field.label} value={field.value} />
+        <CopyableInfoRow key={field.id} label={field.label} value={field.value} displayValue={field.displayValue} />
       ))}
     </div>
   );

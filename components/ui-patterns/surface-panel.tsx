@@ -17,7 +17,7 @@ type SurfacePanelProps = {
 
 const TONE_CLASS: Record<SurfaceTone, string> = {
   base: "bg-[#f7f7f4] shadow-[0_1px_2px_rgba(31,34,28,0.02),0_8px_24px_rgba(31,34,28,0.03)]",
-  soft: "bg-[#fafaf7] shadow-[0_1px_1px_rgba(31,34,28,0.02),0_6px_18px_rgba(31,34,28,0.025)]",
+  soft: "bg-[#fafaf7] shadow-[0_1px_1px_rgba(31,34,28,0.02)]",
   inset: "bg-[#f3f4ef] shadow-[0_1px_1px_rgba(31,34,28,0.015)]",
 };
 

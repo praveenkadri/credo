@@ -1,10 +1,19 @@
 import { ComingSoonPage } from "@/components/ui-shell/coming-soon-page";
+import { WorkspaceLockedState } from "@/components/system/workspace-locked-state";
+import { getCurrentUser } from "@/lib/auth/session";
 
-export default function InsightsPage() {
+export default async function InsightsPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return <WorkspaceLockedState />;
+  }
+
   return (
     <ComingSoonPage
-      title="Insights"
-      description="Track trends, cash movement, and operational performance signals."
+      title="Payroll reports"
+      description="Track payroll activity, company totals, and records over time."
+      visual="insights"
     />
   );
 }

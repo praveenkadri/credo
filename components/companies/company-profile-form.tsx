@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Input } from "@/components/ui-primitives/input";
 import { Button, buttonClassName } from "@/components/ui-primitives/button";
@@ -15,14 +15,13 @@ import {
 import type { CompanyProfile } from "@/lib/data/companies";
 import { normalizeAddressValue, type AddressValue } from "@/lib/mapbox/address-search";
 import { routes } from "@/lib/routes";
-import { supabase } from "@/lib/supabase/client";
 
 const FIELD_CLASS =
-  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] rounded-2xl bg-[#fafaf7] px-4 text-[14px] text-[#575b55] transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[28px] bg-white/70 p-6 ring-1 ring-neutral-200/40 shadow-[0_10px_28px_rgba(15,23,42,0.03)] md:p-7">
+    <section className="rounded-[28px] bg-[#fafaf7] p-6 shadow-[0_1px_1px_rgba(31,34,28,0.02)] md:p-7">
       <h2 className="type-card-title">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
@@ -81,9 +80,6 @@ export function CompanyProfileForm({
   const [companyName, setCompanyName] = useState(defaultProfile?.companyName ?? "");
   const [legalName, setLegalName] = useState(defaultProfile?.legalName ?? "");
   const [sameAsCompanyName, setSameAsCompanyName] = useState(defaultProfile?.sameAsCompanyName ?? true);
-  const [sessionAccessToken, setSessionAccessToken] = useState("");
-  const [sessionUserId, setSessionUserId] = useState("");
-  const [sessionWorkspaceId, setSessionWorkspaceId] = useState("");
   const [address, setAddress] = useState<AddressValue>(
     normalizeAddressValue({
       line1: defaultProfile?.streetAddress ?? "",
@@ -108,61 +104,6 @@ export function CompanyProfileForm({
   const [state, formAction] = useActionState(action, initialState);
   const show = (section: "identity" | "address" | "tax" | "authorization") =>
     !focusSection || focusSection === section;
-
-  useEffect(() => {
-    let active = true;
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!active) return;
-        const session = data.session;
-        const user = session?.user;
-        const appMeta = user?.app_metadata as Record<string, unknown> | undefined;
-        const userMeta = user?.user_metadata as Record<string, unknown> | undefined;
-        setSessionAccessToken(session?.access_token ?? "");
-        setSessionUserId(user?.id ?? "");
-        setSessionWorkspaceId(
-          String(
-            appMeta?.workspace_id ??
-              userMeta?.workspace_id ??
-              appMeta?.organization_id ??
-              userMeta?.organization_id ??
-              ""
-          )
-        );
-      })
-      .catch(() => {
-        if (!active) return;
-        setSessionAccessToken("");
-        setSessionUserId("");
-        setSessionWorkspaceId("");
-      });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user;
-      const appMeta = user?.app_metadata as Record<string, unknown> | undefined;
-      const userMeta = user?.user_metadata as Record<string, unknown> | undefined;
-      setSessionAccessToken(session?.access_token ?? "");
-      setSessionUserId(user?.id ?? "");
-      setSessionWorkspaceId(
-        String(
-          appMeta?.workspace_id ??
-            userMeta?.workspace_id ??
-            appMeta?.organization_id ??
-            userMeta?.organization_id ??
-            ""
-        )
-      );
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -196,7 +137,7 @@ export function CompanyProfileForm({
             />
           </Field>
 
-          <label className="flex items-center gap-2.5 rounded-xl bg-white/60 px-3 py-2 ring-1 ring-neutral-200/50">
+          <label className="flex items-center gap-2.5 rounded-xl bg-[#f3f4ef] px-3 py-2">
             <input
               name="sameAsCompanyName"
               type="checkbox"
@@ -208,7 +149,7 @@ export function CompanyProfileForm({
                   setLegalName(companyName);
                 }
               }}
-              className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+              className="h-4 w-4 rounded border-neutral-300 accent-[var(--action-primary)] focus:ring-[var(--action-ring)]"
             />
             <span className="type-body-small text-neutral-700">Legal name is same as company name</span>
           </label>
@@ -306,10 +247,6 @@ export function CompanyProfileForm({
           variant="error"
         />
       ) : null}
-
-      <input type="hidden" name="sessionAccessToken" value={sessionAccessToken} />
-      <input type="hidden" name="sessionUserId" value={sessionUserId} />
-      <input type="hidden" name="sessionWorkspaceId" value={sessionWorkspaceId} />
 
       <div className="flex items-center justify-center gap-3 pt-2">
         <SubmitButton mode={mode} />

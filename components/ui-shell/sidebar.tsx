@@ -1,295 +1,195 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar } from "@/components/ui-primitives/avatar";
-import { Tooltip } from "@/components/ui-primitives/tooltip";
-import { SIDEBAR_WIDTH } from "@/components/ui-shell/layout-constants";
-import { CredoBrandMark } from "@/components/ui-shell/credo-brand-mark";
-import { isOverviewPath, isPayrollPath, routes } from "@/lib/routes";
+import { NavIcon } from "@/components/ui-shell/nav-icon";
+import { PRIMARY_NAV_ITEMS, type PrimaryNavItem } from "@/components/ui-shell/primary-nav-items";
+import { routes } from "@/lib/routes";
 import { useContent } from "@/lib/useContent";
 
-type NavItem = {
+type SidebarNavItem = PrimaryNavItem & {
   label: string;
-  href: string;
-  isActive: (pathname: string) => boolean;
-  icon: () => JSX.Element;
 };
 
-const ICON_STROKE_WIDTH = 1.45;
-const ICON_SIZE = 18;
-const ICON_VIEWBOX = "0 0 18 18";
-
-function OverviewIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <rect x="3.3" y="3.3" width="4.6" height="4.6" rx="1.05" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <rect x="10.1" y="3.3" width="4.6" height="4.6" rx="1.05" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <rect x="3.3" y="10.1" width="4.6" height="4.6" rx="1.05" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <rect x="10.1" y="10.1" width="4.6" height="4.6" rx="1.05" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-    </svg>
-  );
-}
-
-function PayrollIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <rect x="3.4" y="3.6" width="11.2" height="10.8" rx="1.35" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <path d="M6.2 6.9H12M6.2 9H12M6.2 11.1H12" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-      <path d="M4.9 6.9H5.2M4.9 9H5.2M4.9 11.1H5.2" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function DocumentsIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <path d="M5 3.4H11L13 5.5V13.1C13 13.8 12.4 14.4 11.7 14.4H5.3C4.6 14.4 4 13.8 4 13.1V4.7C4 4 4.6 3.4 5.3 3.4H5Z" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10.8 3.5V5.8H13" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.4 8.1H10.5M6.4 10.1H10.5M6.4 12.1H9.1" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TeamIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <circle cx="7" cy="6.8" r="1.9" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <circle cx="11.8" cy="7.8" r="1.55" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <path d="M4.2 13.6C5 11.9 6.2 11 7.9 11C9.5 11 10.8 11.8 11.7 13.6" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-      <path d="M10.3 13.6C10.8 12.5 11.6 11.9 12.7 11.9C13.6 11.9 14.3 12.4 14.8 13.6" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EmployeesIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <circle cx="6.6" cy="6.4" r="1.8" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <circle cx="11.7" cy="7.2" r="1.45" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} />
-      <path d="M3.9 13.4C4.8 11.6 6 10.8 7.6 10.8C9.2 10.8 10.5 11.6 11.3 13.4" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-      <path d="M10.4 13.4C10.8 12.4 11.6 11.9 12.7 11.9C13.5 11.9 14.2 12.3 14.7 13.4" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function InsightsIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <path d="M3.9 14H14.1" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" />
-      <path d="M4.7 12.2L7.7 9.3L10 10.8L13.1 6.9" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M11.7 6.9H13.1V8.3" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ComplianceIcon() {
-  return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox={ICON_VIEWBOX} fill="none" aria-hidden="true">
-      <path d="M9 2.9L13.8 4.6V8.7C13.8 11.3 12.2 13.6 9 14.9C5.8 13.6 4.2 11.3 4.2 8.7V4.6L9 2.9Z" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.1 8.9L8.4 10.2L11 7.6" stroke="currentColor" strokeWidth={ICON_STROKE_WIDTH} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: "Overview",
-    href: routes.overview,
-    isActive: isOverviewPath,
-    icon: OverviewIcon,
-  },
-  { label: "Team", href: routes.team, isActive: (pathname) => pathname.startsWith(routes.team), icon: TeamIcon },
-  {
-    label: "Employees",
-    href: routes.employees,
-    isActive: (pathname) => pathname.startsWith(routes.employees),
-    icon: EmployeesIcon,
-  },
-  {
-    label: "Payroll",
-    href: routes.payroll,
-    isActive: isPayrollPath,
-    icon: PayrollIcon,
-  },
-  {
-    label: "Documents",
-    href: routes.documents,
-    isActive: (pathname) => pathname.startsWith(routes.documents),
-    icon: DocumentsIcon,
-  },
-  {
-    label: "Insights",
-    href: routes.insights,
-    isActive: (pathname) => pathname.startsWith(routes.insights),
-    icon: InsightsIcon,
-  },
-  {
-    label: "Compliance",
-    href: routes.compliance,
-    isActive: (pathname) => pathname.startsWith(routes.compliance),
-    icon: ComplianceIcon,
-  },
-];
-
-function NavRow({
-  item,
-  collapsed,
-  pathname,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  pathname: string;
-}) {
-  const active = item.isActive(pathname);
-
-  const button = (
-    <Link
-      href={item.href}
-      aria-label={collapsed ? item.label : undefined}
-      className={[
-        "group relative flex cursor-pointer items-center transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
-        collapsed ? "size-10 self-center justify-center rounded-xl" : "h-10 w-full gap-2.5 rounded-xl px-2.5",
-        active
-          ? "bg-neutral-100/80 text-neutral-900"
-          : "text-[#6e736b] hover:bg-neutral-100/70 hover:text-neutral-900",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]",
-          active ? "bg-neutral-100/80 opacity-100" : "",
-        ].join(" ")}
-        aria-hidden="true"
-      />
-      <span
-        className={[
-          "relative z-10 flex size-5 shrink-0 items-center justify-center transition-[color,opacity] duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]",
-          active ? "text-[#575b55] opacity-100" : "text-[#93988f] opacity-85 group-hover:text-[#6e736b] group-hover:opacity-100",
-        ].join(" ")}
-      >
-        {item.icon()}
-      </span>
-      <span
-        className={[
-          "relative z-10 min-w-0 overflow-hidden transition-[max-width] duration-200 ease-out motion-reduce:transition-none",
-          collapsed ? "max-w-0" : "max-w-[164px]",
-        ].join(" ")}
-      >
-        <span
-          className={[
-            "block whitespace-nowrap text-sm font-medium leading-[1.35] tracking-[-0.02em] transition-[opacity,transform,color] duration-[170ms] ease-out motion-reduce:transition-none",
-            "type-button",
-            active ? "text-[#1f221c]" : "text-[#6e736b] group-hover:text-[#1f221c]",
-            collapsed ? "translate-x-1 opacity-0" : "translate-x-0 opacity-100",
-          ].join(" ")}
-          aria-hidden={collapsed}
-        >
-          {item.label}
-        </span>
-      </span>
-    </Link>
-  );
-
-  if (!collapsed) return button;
-
-  return (
-    <Tooltip label={item.label} className="w-full">
-      <span className="w-full">{button}</span>
-    </Tooltip>
-  );
-}
+type NavigationState = {
+  hasCompanies: boolean;
+  hasEmployees: boolean;
+  hasPayrollRuns: boolean;
+  hasDocuments: boolean;
+  hasCompanyActivity: boolean;
+  hasComplianceDetails: boolean;
+  hasPayrollSetupStarted: boolean;
+  hasPayrollSetupComplete: boolean;
+};
 
 type SidebarProps = {
   collapsed: boolean;
   onToggle: () => void;
-  lockedCollapsed?: boolean;
 };
 
-export default function Sidebar({ collapsed, onToggle, lockedCollapsed = false }: SidebarProps) {
+const DEFAULT_NAVIGATION_STATE: NavigationState = {
+  hasCompanies: false,
+  hasEmployees: false,
+  hasPayrollRuns: false,
+  hasDocuments: false,
+  hasCompanyActivity: false,
+  hasComplianceDetails: false,
+  hasPayrollSetupStarted: false,
+  hasPayrollSetupComplete: false,
+};
+
+function SidebarNavItem({ item, pathname }: { item: SidebarNavItem; pathname: string }) {
+  const active = item.isActive(pathname);
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={[
+        "group/nav relative flex h-[37px] items-center gap-2.5 rounded-[8px] px-4 text-[13px] font-medium leading-none outline-none transition-[background-color,color] duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
+        "focus-visible:ring-2 focus-visible:ring-[rgba(21,90,67,0.22)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--credo-surface-warm)]",
+        active
+          ? "bg-transparent text-[var(--credo-green-950)]"
+          : "text-[#5F665E] hover:bg-[var(--credo-bronze-pale)] hover:text-[var(--credo-green-950)]",
+      ].join(" ")}
+    >
+      {active ? (
+        <span
+          className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full bg-[var(--credo-green-800)]"
+          aria-hidden="true"
+        />
+      ) : null}
+      <NavIcon icon={item.icon} label={item.label} tone={item.tone} active={active} collapsed={false} density="sidebar" />
+      <span className={active ? "text-[var(--credo-green-950)]" : "text-[#5F665E] group-hover/nav:text-[var(--credo-green-950)]"}>
+        {item.label}
+      </span>
+    </Link>
+  );
+}
+
+export default function Sidebar({ collapsed: _collapsed, onToggle: _onToggle }: SidebarProps) {
   const pathname = usePathname();
   const c = useContent();
   const nav = c.navigation;
-  const resolvedCollapsed = lockedCollapsed ? true : collapsed;
+  const [navigationState, setNavigationState] = useState<NavigationState>(DEFAULT_NAVIGATION_STATE);
 
-  const navItems = [
-    { ...NAV_ITEMS[0], label: nav.overview },
-    { ...NAV_ITEMS[1], label: nav.team },
-    { ...NAV_ITEMS[2], label: nav.employees },
-    { ...NAV_ITEMS[3], label: nav.payroll },
-    { ...NAV_ITEMS[4], label: nav.documents },
-    { ...NAV_ITEMS[5], label: nav.insights },
-    { ...NAV_ITEMS[6], label: nav.compliance },
-  ];
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/dashboard/navigation-state")
+      .then((response) => {
+        if (!response.ok) return DEFAULT_NAVIGATION_STATE;
+        return response.json() as Promise<NavigationState>;
+      })
+      .then((payload) => {
+        if (active) {
+          setNavigationState({ ...DEFAULT_NAVIGATION_STATE, ...payload });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setNavigationState(DEFAULT_NAVIGATION_STATE);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  const labels: Record<PrimaryNavItem["id"], string> = {
+    overview: nav.overview,
+    companies: "Companies",
+    employees: nav.employees,
+    workflows: "Workflows",
+    payroll: nav.payroll,
+    documents: nav.documents,
+    insights: "Reports",
+    compliance: nav.compliance,
+  };
+
+  const navItems = PRIMARY_NAV_ITEMS
+    .filter((item) => shouldShowSidebarNavItem(item, pathname, navigationState))
+    .map((item) => ({ ...item, label: labels[item.id] }));
 
   return (
     <aside
-      className={[
-        "relative hidden h-full shrink-0 bg-transparent md:flex md:flex-col",
-        "transition-[width] duration-[240ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
-        resolvedCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
-      ].join(" ")}
+      className="relative hidden h-full w-[232px] shrink-0 border-r border-[var(--credo-border)] bg-[var(--credo-surface-warm)] px-4 py-5 lg:flex lg:flex-col"
       aria-label="Sidebar"
     >
-      <div className="flex h-full flex-col px-3 py-3">
-        <div className={resolvedCollapsed ? "flex justify-center" : "flex items-center justify-between"}>
-          {lockedCollapsed ? (
-            <span className="text-[20px] font-semibold tracking-[-0.05em] text-[#1f221c]">C</span>
-          ) : !resolvedCollapsed ? (
-            <CredoBrandMark className="pl-1" />
-          ) : null}
-
-          {!lockedCollapsed ? (
-            <button
-              type="button"
-              aria-label={resolvedCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              onClick={onToggle}
-              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-xl bg-transparent text-[#6e736b] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/40"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 5H12M4 8H12M4 11H12" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-              </svg>
-            </button>
-          ) : null}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex items-center gap-3 border-b border-[var(--credo-border)] pb-3.5">
+          <SidebarBrandMark />
+          <div className="min-w-0">
+            <div className="truncate text-[14px] font-bold leading-[1.1] text-[var(--credo-ink)]">
+              Credo
+            </div>
+            <div className="mt-1 truncate text-[11px] font-medium leading-none text-[var(--credo-muted)]">
+              Payroll workspace
+            </div>
+          </div>
         </div>
 
-        <div className={resolvedCollapsed ? "mt-4 flex flex-col gap-1.5" : "mt-5 flex flex-col gap-1"}>
+        <nav className="mt-[18px] flex flex-col gap-1.5" aria-label="Primary navigation">
           {navItems.map((item) => (
-            <NavRow key={item.label} item={item} collapsed={resolvedCollapsed} pathname={pathname} />
+            <SidebarNavItem key={item.id} item={item} pathname={pathname} />
           ))}
-        </div>
+        </nav>
 
         <div className="flex-1" />
-
-        <div className={resolvedCollapsed ? "pt-3 flex justify-center" : "pt-4"}>
-          {resolvedCollapsed ? (
-            <Tooltip label="Credo workspace">
-              <button
-                type="button"
-                aria-label="Credo workspace"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#242421] text-[12.5px] font-medium text-white transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)]"
-              >
-                C
-              </button>
-            </Tooltip>
-          ) : (
-            <button
-              type="button"
-              className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[#575b55] transition-colors duration-[140ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-neutral-100/70 hover:text-neutral-900"
-            >
-              <Avatar initials="C" />
-              <div className="min-w-0">
-                <div className="type-button truncate text-[#1f221c]">
-                  Credo workspace
-                </div>
-                <div className="type-caption truncate">
-                  Operations
-                </div>
-              </div>
-            </button>
-          )}
-        </div>
       </div>
     </aside>
   );
+}
+
+function SidebarBrandMark() {
+  return (
+    <span
+      className="relative inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[13px] bg-[var(--credo-green-950)] text-[var(--credo-surface-warm)] shadow-[0_10px_22px_rgba(18,54,44,0.12)] ring-1 ring-[rgba(184,135,79,0.18)]"
+      aria-hidden="true"
+    >
+      <span className="absolute inset-[5px] rounded-[9px] bg-white/[0.07]" />
+      <span className="absolute right-[7px] top-[7px] size-1.5 rounded-full bg-[var(--credo-bronze)]" />
+      <span className="relative -mt-px text-[18px] font-semibold leading-none tracking-[-0.055em]">
+        C
+      </span>
+    </span>
+  );
+}
+
+function shouldShowSidebarNavItem(item: PrimaryNavItem, pathname: string, state: NavigationState) {
+  if (item.id === "overview" || item.id === "companies") {
+    return true;
+  }
+
+  if (item.isActive(pathname)) {
+    return true;
+  }
+
+  if (item.id === "employees") {
+    return state.hasCompanies || state.hasEmployees || pathname.startsWith(routes.employees) || pathname.startsWith(routes.team);
+  }
+
+  if (item.id === "workflows") {
+    return state.hasCompanies || pathname.startsWith(routes.workflows);
+  }
+
+  if (item.id === "payroll") {
+    return state.hasEmployees || state.hasPayrollRuns || state.hasPayrollSetupComplete || pathname.startsWith(routes.payroll);
+  }
+
+  if (item.id === "documents") {
+    return state.hasDocuments || state.hasPayrollRuns || pathname.startsWith(routes.documents);
+  }
+
+  if (item.id === "insights") {
+    return state.hasPayrollRuns || state.hasDocuments || state.hasCompanyActivity || pathname.startsWith(routes.insights);
+  }
+
+  if (item.id === "compliance") {
+    return state.hasComplianceDetails || pathname.startsWith(routes.compliance);
+  }
+
+  return false;
 }

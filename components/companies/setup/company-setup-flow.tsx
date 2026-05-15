@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import {
   createCompanySetupAction,
   type CreateCompanySetupActionState,
 } from "@/app/companies/new/actions";
+import { StepIcon } from "@/components/brand/brand-visuals";
 import { CompanySetupCard } from "@/components/companies/setup/company-setup-card";
 import { SoftNotice } from "@/components/system/SoftNotice";
 import { CompanySetupStepHeader } from "@/components/companies/setup/company-setup-step-header";
@@ -16,14 +17,13 @@ import {
   normalizeAddressValue,
   type AddressValue,
 } from "@/lib/mapbox/address-search";
-import { supabase } from "@/lib/supabase/client";
 import { useSessionDraft } from "@/hooks/useSessionDraft";
 import { useContent } from "@/lib/useContent";
 
 const initialActionState: CreateCompanySetupActionState = {};
 
 const FIELD_CLASS =
-  "h-[52px] rounded-2xl bg-white/80 px-4 text-[14px] text-[#575b55] ring-1 ring-neutral-200/60 transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-white focus:outline-none focus-visible:outline-none focus:bg-white focus:text-[#1f221c] focus:ring-2 focus:ring-neutral-300/40";
+  "h-[52px] rounded-2xl bg-[#fafaf7] px-4 text-[14px] text-[#575b55] transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#f1f2ef] focus:outline-none focus-visible:outline-none focus:bg-[#f1f2ef] focus:text-[#1f221c] focus:ring-2 focus:ring-[var(--action-ring)]";
 
 type SetupStep = 1 | 2;
 type CompanySetupDraft = {
@@ -60,9 +60,9 @@ function Field({
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-[12px] font-medium text-neutral-600">{label}</span>
+      <span className="type-label text-neutral-600">{label}</span>
       {children}
-      {hint ? <p className="text-[12px] text-neutral-500">{hint}</p> : null}
+      {hint ? <p className="type-body-small text-neutral-500">{hint}</p> : null}
     </label>
   );
 }
@@ -78,9 +78,6 @@ export function CompanySetupFlow({ mode = "default" }: { mode?: "first" | "defau
   const [addressTouched, setAddressTouched] = useState(false);
   const [localCompanyNameError, setLocalCompanyNameError] = useState<string | null>(null);
   const [localAddressError, setLocalAddressError] = useState<string | null>(null);
-  const [sessionAccessToken, setSessionAccessToken] = useState("");
-  const [sessionUserId, setSessionUserId] = useState("");
-  const [sessionWorkspaceId, setSessionWorkspaceId] = useState("");
   const [actionState, formAction] = useActionState(createCompanySetupAction, initialActionState);
 
   const isFirstMode = mode === "first";
@@ -90,61 +87,6 @@ export function CompanySetupFlow({ mode = "default" }: { mode?: "first" | "defau
   const address = draft.address;
   const companyNameMissing = !companyName.trim();
   const addressMissing = !isAddressComplete(address);
-
-  useEffect(() => {
-    let active = true;
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!active) return;
-        const session = data.session;
-        const user = session?.user;
-        const appMeta = user?.app_metadata as Record<string, unknown> | undefined;
-        const userMeta = user?.user_metadata as Record<string, unknown> | undefined;
-        setSessionAccessToken(session?.access_token ?? "");
-        setSessionUserId(user?.id ?? "");
-        setSessionWorkspaceId(
-          String(
-            appMeta?.workspace_id ??
-              userMeta?.workspace_id ??
-              appMeta?.organization_id ??
-              userMeta?.organization_id ??
-              ""
-          )
-        );
-      })
-      .catch(() => {
-        if (!active) return;
-        setSessionAccessToken("");
-        setSessionUserId("");
-        setSessionWorkspaceId("");
-      });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user;
-      const appMeta = user?.app_metadata as Record<string, unknown> | undefined;
-      const userMeta = user?.user_metadata as Record<string, unknown> | undefined;
-      setSessionAccessToken(session?.access_token ?? "");
-      setSessionUserId(user?.id ?? "");
-      setSessionWorkspaceId(
-        String(
-          appMeta?.workspace_id ??
-            userMeta?.workspace_id ??
-            appMeta?.organization_id ??
-            userMeta?.organization_id ??
-            ""
-        )
-      );
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   function nextStep() {
     setCompanyNameTouched(true);
@@ -217,6 +159,7 @@ export function CompanySetupFlow({ mode = "default" }: { mode?: "first" | "defau
             : c.company.create.enteringDetailsSubtitle
         }
         onBack={step === 2 ? () => setDraft((previous) => ({ ...previous, step: 1 })) : undefined}
+        stepIcon={<StepIcon icon={step === 1 ? "building" : "compliance"} tone={step === 1 ? "peach" : "sand"} />}
       />
 
       {formError ? (
@@ -303,10 +246,6 @@ export function CompanySetupFlow({ mode = "default" }: { mode?: "first" | "defau
           name="sameAsCompanyName"
           value={draft.legalSameAsCompanyName ? "on" : "off"}
         />
-        <input type="hidden" name="sessionAccessToken" value={sessionAccessToken} />
-        <input type="hidden" name="sessionUserId" value={sessionUserId} />
-        <input type="hidden" name="sessionWorkspaceId" value={sessionWorkspaceId} />
-
         {step === 1 ? (
           <SetupNavigationButtons
             canGoBack={false}

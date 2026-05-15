@@ -1,17 +1,22 @@
 {
-  "name": "nuvra-sidebar-v4",
+  "name": "credo-operations-workspace",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "security:audit": "sh scripts/security-audit.sh",
+    "zip": "rm -f project-source.zip && git ls-files --cached --others --exclude-standard -z | xargs -0 zip -q project-source.zip"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.1",
     "next": "^16.2.4",
+    "pdf-lib": "^1.17.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

@@ -3,27 +3,111 @@
 @tailwind utilities;
 
 :root {
-  --bg-canvas: #f5f5f1;
-  --bg-shell: #f7f7f4;
-  --bg-rail: #fafaf7;
-  --bg-layer-1: #fafaf7;
-  --bg-layer-2: #f7f7f4;
-  --bg-layer-3: #f1f2ef;
-  --text-strong: #1f221c;
-  --text-body: #575b55;
-  --text-muted: #6e736b;
-  --text-faint: #93988f;
-  --interactive-hover: rgba(31, 34, 28, 0.035);
-  --interactive-active: rgba(31, 34, 28, 0.06);
-  --action-primary: #3a3a34;
-  --action-primary-hover: #4a4a43;
-  --action-primary-muted: rgba(58, 58, 52, 0.1);
-  --action-primary-soft: #f1f1ec;
-  --action-text: #242421;
-  --text-primary: #1f221c;
-  --text-secondary: #575b55;
-  --text-muted-2: #93988f;
-  --shadow-whisper: 0 1px 2px rgba(31, 34, 28, 0.02), 0 8px 24px rgba(31, 34, 28, 0.03);
+  --credo-bg: #f6f4ef;
+  --credo-surface: #ffffff;
+  --credo-surface-warm: #fbfaf6;
+  --credo-cream: #fbfaf4;
+  --credo-cream-strong: #f7f3ea;
+  --credo-beige: #efe5d5;
+  --credo-ink: #171a17;
+  --credo-muted: #6f746d;
+  --credo-muted-strong: #4e554d;
+  --credo-green-975: #0c261d;
+  --credo-green-950: #12362c;
+  --credo-green-900: #102f24;
+  --credo-green-800: #155a43;
+  --credo-green-700: #0f6b4d;
+  --credo-olive-muted: #5f6652;
+  --credo-olive-strong: #4d5948;
+  --credo-taupe-wash: #f3eadc;
+  --credo-cream-muted: #f8f5ee;
+  --credo-bronze: #b8874f;
+  --credo-bronze-700: #8f6335;
+  --credo-bronze-soft: #f1e7d8;
+  --credo-bronze-pale: #f7efe4;
+  --credo-taupe: #e8e2d8;
+  --credo-taupe-strong: #d8cbb9;
+  --credo-border: #e1dacf;
+  --credo-border-strong: #d5c7b6;
+  --credo-hero: var(--credo-green-950);
+  --credo-accent: var(--credo-bronze);
+  --credo-accent-soft: var(--credo-bronze-soft);
+  --credo-icon-wash: var(--credo-taupe-wash);
+  --app-bg: var(--credo-bg);
+  --surface: var(--credo-surface);
+  --surface-warm: var(--credo-surface-warm);
+  --border-soft: var(--credo-border);
+  --ink: var(--credo-ink);
+  --muted: var(--credo-muted);
+  --bg-canvas: var(--app-bg);
+  --bg-shell: var(--credo-bg);
+  --bg-rail: var(--surface-warm);
+  --bg-layer-1: var(--surface-warm);
+  --bg-layer-2: #f4f1ea;
+  --bg-layer-3: var(--credo-taupe);
+  --text-strong: var(--ink);
+  --text-body: var(--muted);
+  --text-muted: var(--muted);
+  --text-faint: #9a958d;
+  --interactive-hover: rgba(184, 135, 79, 0.12);
+  --interactive-active: rgba(184, 135, 79, 0.18);
+  --brand-primary: var(--credo-green-800);
+  --brand-primary-hover: var(--credo-green-700);
+  --brand-primary-soft: var(--credo-bronze-soft);
+  --brand-primary-muted: rgba(184, 135, 79, 0.12);
+  --brand-primary-ring: rgba(21, 90, 67, 0.24);
+  --brand-primary-border: rgba(91, 77, 58, 0.2);
+  --brand-chart-line: var(--credo-green-800);
+  --brand-chart-line-muted: rgba(21, 90, 67, 0.28);
+  --brand-chart-fill-strong: rgba(184, 135, 79, 0.11);
+  --brand-chart-fill-soft: rgba(184, 135, 79, 0.055);
+  --brand-chart-fill-none: rgba(21, 90, 67, 0);
+  --brand-chart-dot: rgba(184, 135, 79, 0.18);
+  --action-primary: var(--brand-primary);
+  --action-primary-hover: var(--brand-primary-hover);
+  --action-primary-muted: var(--brand-primary-muted);
+  --action-primary-soft: var(--brand-primary-soft);
+  --action-ring: var(--brand-primary-ring);
+  --action-text: var(--ink);
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted);
+  --text-muted-2: #928a7d;
+  --brand-olive-bg: var(--credo-taupe-wash);
+  --brand-olive-fg: var(--credo-green-950);
+  --brand-sky-bg: var(--credo-cream-muted);
+  --brand-sky-fg: var(--credo-olive-strong);
+  --brand-peach-bg: var(--credo-bronze-soft);
+  --brand-peach-fg: var(--credo-bronze-700);
+  --brand-lavender-bg: var(--credo-taupe);
+  --brand-lavender-fg: #6e5f4d;
+  --brand-sand-bg: var(--credo-bronze-soft);
+  --brand-sand-fg: var(--credo-bronze-700);
+  --brand-ink: var(--text-primary);
+  --brand-muted: var(--muted);
+  --brand-border: var(--border-soft);
+  --brand-surface: var(--surface);
+  --brand-offwhite: var(--credo-bg);
+  --shadow-whisper: 0 1px 2px rgba(23, 26, 23, 0.025), 0 8px 24px rgba(23, 26, 23, 0.035);
+  --marketing-green: var(--credo-green-950);
+  --marketing-green-soft: var(--credo-green-800);
+  --marketing-green-hover: #174838;
+  --marketing-cream: var(--credo-cream);
+  --marketing-cream-strong: var(--credo-cream-strong);
+  --marketing-beige: var(--credo-beige);
+  --marketing-taupe: var(--credo-taupe);
+  --marketing-olive-muted: var(--credo-olive-muted);
+  --marketing-accent-wash: var(--credo-taupe-wash);
+  --marketing-status-bg: rgba(243, 234, 220, 0.86);
+  --marketing-status-border: rgba(91, 77, 58, 0.18);
+  --marketing-border: rgba(91, 77, 58, 0.16);
+  --marketing-border-strong: rgba(91, 77, 58, 0.24);
+  --marketing-text: var(--credo-ink);
+  --marketing-muted: #656960;
+  --marketing-muted-soft: #7b7b70;
+  --marketing-shadow-soft: 0 18px 48px rgba(42, 35, 25, 0.08), 0 1px 0 rgba(255, 255, 255, 0.72) inset;
+  --marketing-shadow-card: 0 24px 70px rgba(42, 35, 25, 0.12), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+  --marketing-shadow-dark: 0 26px 76px rgba(6, 24, 17, 0.28), 0 1px 0 rgba(255, 255, 255, 0.09) inset;
+  --marketing-shadow-button: 0 14px 30px rgba(18, 54, 44, 0.18);
   --motion-fast: 90ms;
   --motion-base: 160ms;
   --motion-slow: 240ms;
@@ -46,7 +130,7 @@ body {
   min-height: 100%;
   background: var(--bg-canvas);
   color: var(--text-strong);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -59,31 +143,31 @@ select {
 }
 
 .type-page-title {
-  font-size: clamp(2rem, 2.4vw, 2.5rem);
-  line-height: 1.16;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.75rem, 2vw, 2rem);
+  line-height: 1.18;
+  font-weight: 650;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
 .type-section-title {
-  font-size: 1.5rem;
+  font-size: 1.1875rem;
   line-height: 1.25;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 
 .type-card-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.3;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   color: var(--text-primary);
 }
 
 .type-body {
-  font-size: 1rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   font-weight: 400;
   letter-spacing: 0;
@@ -91,7 +175,7 @@ select {
 }
 
 .type-body-strong {
-  font-size: 1rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   font-weight: 500;
   letter-spacing: 0;
@@ -99,7 +183,7 @@ select {
 }
 
 .type-body-small {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   font-weight: 400;
   letter-spacing: 0;
@@ -107,7 +191,7 @@ select {
 }
 
 .type-caption {
-  font-size: 0.75rem;
+  font-size: 0.71875rem;
   line-height: 1.4;
   font-weight: 400;
   letter-spacing: 0;
@@ -115,7 +199,7 @@ select {
 }
 
 .type-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.35;
   font-weight: 500;
   letter-spacing: 0;
@@ -123,32 +207,33 @@ select {
 }
 
 .type-eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   line-height: 1.3;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted-2);
 }
 
 .type-button {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.2;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
 .type-metric {
-  font-size: 2rem;
+  font-size: clamp(2.25rem, 3.5vw, 2.75rem);
   line-height: 1.12;
   font-weight: 650;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .type-metric-small,
-.numeric-tabular {
+.numeric-tabular,
+[data-numeric="true"] {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
@@ -299,6 +384,205 @@ select {
   display: none;
 }
 
+.marketing-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: marketingReveal 560ms var(--ease-out-soft) forwards;
+  animation-timeline: view();
+  animation-range: entry 8% cover 26%;
+}
+
+.marketing-reveal-immediate {
+  animation: marketingReveal 520ms var(--ease-out-soft) both;
+}
+
+.marketing-delay-1 {
+  animation-delay: 80ms;
+}
+
+.marketing-delay-2 {
+  animation-delay: 160ms;
+}
+
+.marketing-lift {
+  transition:
+    transform 200ms var(--ease-out-soft),
+    box-shadow 200ms var(--ease-out-soft);
+  will-change: transform;
+}
+
+.marketing-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 28px 92px rgba(26, 31, 23, 0.055);
+}
+
+.marketing-lift:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.marketing-button {
+  transition:
+    transform 190ms var(--ease-out-soft),
+    box-shadow 190ms var(--ease-out-soft),
+    background-color 190ms var(--ease-out-soft);
+  will-change: transform;
+}
+
+.marketing-button:hover {
+  transform: translateY(-1px);
+}
+
+.marketing-button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.marketing-graph-path {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: graphDraw 1100ms var(--ease-out-soft) 220ms forwards;
+}
+
+.marketing-plane {
+  isolation: isolate;
+}
+
+.marketing-plane::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(17, 19, 15, 0.018), rgba(255, 255, 255, 0) 22%, rgba(17, 19, 15, 0.012) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0) 42%);
+}
+
+.marketing-plane-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 9% 12% 9%;
+  z-index: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(23, 23, 19, 0.08), transparent);
+}
+
+.marketing-product-float {
+  opacity: 0;
+  transform: translateY(10px);
+  animation:
+    productEnter 620ms var(--ease-out-soft) 80ms forwards,
+    productFloat 7200ms var(--ease-in-out-soft) 1100ms infinite;
+  will-change: transform, opacity;
+}
+
+.marketing-product-card {
+  transition:
+    transform 220ms var(--ease-out-soft),
+    box-shadow 220ms var(--ease-out-soft);
+}
+
+.marketing-product-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 46px 128px rgba(26, 31, 23, 0.095), 0 1px 0 rgba(255, 255, 255, 0.86) inset;
+}
+
+.marketing-soft-pulse {
+  animation: softPulse 4600ms var(--ease-in-out-soft) infinite;
+}
+
+.marketing-pricing-card {
+  transition:
+    transform 210ms var(--ease-out-soft),
+    box-shadow 210ms var(--ease-out-soft);
+  will-change: transform;
+}
+
+.marketing-pricing-card:hover {
+  transform: translateY(-2px);
+}
+
+.marketing-pricing-card-secondary:hover {
+  box-shadow: 0 30px 92px rgba(26, 31, 23, 0.052);
+}
+
+.marketing-pricing-card-dominant:hover {
+  box-shadow: 0 40px 116px rgba(17, 19, 15, 0.16), 0 1px 0 rgba(255, 255, 255, 0.07) inset;
+}
+
+.marketing-pricing-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.marketing-reveal-stagger:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.marketing-reveal-stagger:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.marketing-row-glow {
+  transition:
+    transform 180ms var(--ease-out-soft),
+    background-color 180ms var(--ease-out-soft);
+}
+
+.marketing-row-glow:hover {
+  transform: translateX(2px);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+@keyframes marketingReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes productEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes productFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-0.08deg);
+  }
+}
+
+@keyframes softPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-1px);
+    opacity: 0.9;
+  }
+}
+
+@keyframes graphDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 1ms !important;
@@ -315,7 +599,19 @@ select {
   .shell-enter,
   .banner-enter,
   .payroll-modal-surface,
-  .payroll-step-surface {
+  .payroll-step-surface,
+  .marketing-reveal,
+  .marketing-reveal-immediate,
+  .marketing-product-float,
+  .marketing-soft-pulse,
+  .marketing-lift,
+  .marketing-button,
+  .marketing-product-card,
+  .marketing-pricing-card,
+  .marketing-row-glow {
+    animation: none !important;
+    transition: none !important;
     transform: none !important;
+    opacity: 1 !important;
   }
 }

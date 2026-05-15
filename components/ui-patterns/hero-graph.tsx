@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import { ChartRangeSelector } from "@/components/overview/chart-range-selector";
+import { buttonClassName } from "@/components/ui-primitives/button";
 import { motionClass } from "@/components/ui/motion";
-import { surfaceClass } from "@/components/ui/surface";
-import { layoutTokens } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type HeroGraphPoint = {
@@ -114,8 +113,8 @@ function areaPath(points: { x: number; y: number }[], baseY: number, endIndex: n
 }
 
 export function HeroGraph({
-  title = "Cash movement",
-  valueLabel = "Portfolio value",
+  title = "Net revenue",
+  valueLabel = "Net revenue",
   currentValue,
   deltaText,
   deltaPositive = true,
@@ -169,10 +168,10 @@ export function HeroGraph({
     return () => ro.disconnect();
   }, []);
 
-  const height = layoutTokens.chartHeight;
-  const topPad = 24;
+  const height = 332;
+  const topPad = 34;
   const rightPad = 10;
-  const bottomPad = 28;
+  const bottomPad = 34;
   const leftPad = 10;
   const innerWidth = Math.max(width - leftPad - rightPad, 40);
   const innerHeight = height - topPad - bottomPad;
@@ -220,34 +219,36 @@ export function HeroGraph({
   return (
     <section
       className={cn(
-        surfaceClass("chartSurface"),
-        "px-5 py-4",
+        "px-1 py-2",
         className
       )}
     >
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex items-start justify-between gap-6 px-1 pt-1">
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#93988f]">{title}</p>
-          <h2 className="mt-2 text-[60px] font-medium leading-none tracking-[-0.05em] text-neutral-950">{currentDisplayValue}</h2>
+          <p className="type-eyebrow text-[var(--credo-bronze-700)]">{title}</p>
+          <h2 className="numeric-tabular mt-3 text-[48px] font-bold leading-[0.96] text-[var(--credo-ink)] md:text-[54px]">{currentDisplayValue}</h2>
           <p
             className={cn(
-              "mt-2 text-[17px] font-medium tracking-[-0.02em]",
-              deltaPositive ? "text-[#159947]" : "text-[#6e736b]"
+              "mt-2.5 text-[14px] font-medium",
+              deltaPositive ? "text-[var(--credo-green-800)]" : "text-[var(--credo-muted)]"
             )}
           >
             {deltaText}
           </p>
         </div>
 
-        <div className="pt-2 text-right">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#93988f]">{valueLabel}</p>
-          <p className="mt-2 text-[19px] font-medium tracking-[-0.02em] text-[#575b55]">{hoverDisplayValue}</p>
+        <div className="hidden pt-[88px] text-left md:block">
+          <p className="type-body-small flex items-center gap-2 font-semibold text-[var(--credo-muted-strong)]">
+            <span className="inline-flex size-3 rounded-full border-2 border-[var(--brand-chart-line)] bg-[var(--credo-bronze-pale)]" />
+            {valueLabel}
+          </p>
+          <p className="type-body-strong numeric-tabular mt-2 text-[var(--credo-ink)]">{hoverDisplayValue}</p>
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="relative mt-3 rounded-xl bg-neutral-100/60 px-5 py-4"
+        className="relative mt-4 border-b border-black/[0.06]"
         onMouseMove={(e) => updateHover(e.clientX)}
         onMouseEnter={(e) => {
           setIsHovering(true);
@@ -258,19 +259,19 @@ export function HeroGraph({
         <svg
           viewBox={`0 0 ${plotWidth} ${height}`}
           className={cn(
-            `block h-[248px] w-full overflow-visible ${motionClass.softFadeTransform}`,
+            `block h-[332px] w-full overflow-visible ${motionClass.softFadeTransform}`,
             isRangeTransitioning ? "translate-y-[2px] opacity-65" : "translate-y-0 opacity-100"
           )}
         >
           <defs>
             <linearGradient id={`hero-graph-fill-${ids}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(31,122,76,0.08)" />
-              <stop offset="58%" stopColor="rgba(31,122,76,0.04)" />
-              <stop offset="100%" stopColor="rgba(31,122,76,0)" />
+              <stop offset="0%" stopColor="var(--brand-chart-fill-strong)" />
+              <stop offset="58%" stopColor="var(--brand-chart-fill-soft)" />
+              <stop offset="100%" stopColor="var(--brand-chart-fill-none)" />
             </linearGradient>
 
             <pattern id={`hero-graph-dots-${ids}`} width="6" height="6" patternUnits="userSpaceOnUse">
-              <circle cx="1.5" cy="1.5" r="0.65" fill="rgba(31,122,76,0.09)" />
+              <circle cx="1.5" cy="1.5" r="0.65" fill="var(--brand-chart-dot)" />
             </pattern>
 
             <mask id={`hero-graph-area-mask-${ids}`}>
@@ -291,7 +292,7 @@ export function HeroGraph({
           <path
             d={activePath}
             fill="none"
-            stroke="#1f7a4c"
+            stroke="var(--brand-chart-line)"
             strokeWidth="1.85"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -300,7 +301,7 @@ export function HeroGraph({
           <path
             d={trailingPath}
             fill="none"
-            stroke="rgba(31,122,76,0.34)"
+            stroke="var(--brand-chart-line-muted)"
             strokeWidth="1.85"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -311,7 +312,7 @@ export function HeroGraph({
             x2={activePoint.x}
             y1={topPad + 8}
             y2={height - bottomPad}
-            stroke="rgba(212,212,212,0.6)"
+            stroke="rgba(95,102,94,0.24)"
             strokeWidth="1"
             className={cn(
               "transition-opacity duration-[120ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
@@ -319,22 +320,23 @@ export function HeroGraph({
             )}
           />
 
-          <circle cx={activePoint.x} cy={activePoint.y} r="5.5" fill="#1f7a4c" stroke="#fafaf7" strokeWidth="2.5" />
+          <circle cx={activePoint.x} cy={activePoint.y} r="7" fill="var(--credo-surface-warm)" stroke="var(--credo-bronze)" strokeWidth="1.25" opacity="0.58" />
+          <circle cx={activePoint.x} cy={activePoint.y} r="3.8" fill="var(--brand-chart-line)" />
         </svg>
 
         <div
           className={cn(
-            `pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(15,23,42,0.08)] ${motionClass.softFadeFast}`,
+            `pointer-events-none absolute rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-[0_4px_14px_rgba(23,26,23,0.06)] ring-1 ring-[var(--credo-border)] ${motionClass.softFadeFast}`,
             isHovering ? "translate-y-0 opacity-100" : "translate-y-[3px] opacity-0"
           )}
           style={{ left: tooltipLeft, top: tooltipTop }}
         >
-          <p className="font-medium text-[#1f221c]">{hoverDisplayValue}</p>
-          <p className="mt-0.5 text-[11px] text-[#6e736b]">{hoverLabel}</p>
+          <p className="numeric-tabular font-medium text-[var(--credo-ink)]">{hoverDisplayValue}</p>
+          <p className="mt-0.5 text-[11px] text-[var(--credo-muted)]">{hoverLabel}</p>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="mt-5 flex items-center justify-between gap-4 px-1 pb-2">
         <ChartRangeSelector
           ranges={ranges}
           selectedRange={selectedRange}
@@ -345,35 +347,24 @@ export function HeroGraph({
           }}
         />
 
-        <div className="inline-flex items-center rounded-xl bg-[#f3f4ef] p-1">
+        <div className="inline-flex items-center rounded-full bg-[var(--credo-taupe)] p-1">
           <button
             type="button"
             onClick={() => setSelectedMode("Value")}
-            className={cn(
-              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
-              selectedMode === "Value" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b] hover:text-neutral-900"
-            )}
+            className={buttonClassName(selectedMode === "Value" ? "chipActive" : "chip")}
           >
             Value
           </button>
           <button
             type="button"
             onClick={() => setSelectedMode("Returns")}
-            className={cn(
-              "inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium transition-colors duration-[180ms] ease-[cubic-bezier(0.2,0,0,1)]",
-              selectedMode === "Returns" ? "bg-[#fafaf7] text-[#1f221c]" : "text-[#6e736b] hover:text-neutral-900"
-            )}
+            className={buttonClassName(selectedMode === "Returns" ? "chipActive" : "chip")}
           >
             Returns
           </button>
         </div>
       </div>
 
-      {interpretation ? (
-        <p className="mt-3 border-t border-[#e4e8df] pt-3 text-[13px] leading-6 text-neutral-600">
-          {interpretation}
-        </p>
-      ) : null}
     </section>
   );
 }

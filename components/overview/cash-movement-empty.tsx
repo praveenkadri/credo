@@ -1,5 +1,4 @@
 import { surfaceClass } from "@/components/ui/surface";
-import { EmptyState } from "@/components/system/EmptyState";
 import { type SoftNoticeVariant } from "@/components/system/SoftNotice";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -17,22 +16,16 @@ export function CashMovementEmpty({
   ctaLabel?: string;
   noticeVariant?: SoftNoticeVariant;
 }) {
-  return (
-    <section className={cn(surfaceClass("chartSurface"), "shell-enter shell-enter-delay-2 px-5 py-4")}>
-      <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#93988f]">Cash movement</p>
-        <h2 className="mt-2 text-[36px] font-medium leading-none tracking-[-0.04em] text-neutral-900">{title}</h2>
-      </div>
+  const isError = noticeVariant === "error";
 
-      <div className="mt-3 h-[280px]">
-        <EmptyState
-          title={title}
-          description={description}
-          ctaLabel={ctaLabel}
-          ctaHref={ctaHref}
-          variant={noticeVariant}
-          className="flex h-full flex-col justify-center text-center"
-        />
+  return (
+    <section className={cn(surfaceClass("chartSurface"), "shell-enter shell-enter-delay-2 px-6 py-5")}>
+      <div className="max-w-[760px]">
+        <p className="type-eyebrow text-[var(--credo-bronze-700)]">Net revenue</p>
+        <h2 className="numeric-tabular mt-3 text-[42px] font-bold leading-[0.96] text-[var(--credo-ink)] md:text-[54px]">
+          {isError ? "Workspace unavailable" : "$0.00"}
+        </h2>
+        <p className="mt-2.5 text-[14px] font-medium text-[var(--credo-muted)]">{title}</p>
       </div>
     </section>
   );

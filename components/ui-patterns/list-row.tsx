@@ -34,7 +34,7 @@ export function ListRow({
         </div>
       ) : null}
       <div className="min-w-0 flex-1">
-        {title ? <p className="text-sm font-medium text-[#1f221c]">{title}</p> : null}
+        {title ? <p className="type-body-small text-[#1f221c]">{title}</p> : null}
         {description ? (
           <p className="mt-1 text-sm leading-5 text-[#6e736b]">{description}</p>
         ) : null}

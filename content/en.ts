@@ -40,11 +40,11 @@ export const en = {
       createButton: "Create company",
       addButton: "Add company",
       creating: "Creating…",
-      enteringDetailsTitle: "Enter company details",
+      enteringDetailsTitle: "Set up your company",
       enteringDetailsSubtitle:
-        "Add another company workspace for payroll, invoicing, and operations.",
-      firstCompanyTitle: "Create your first company",
-      firstCompanySubtitle: "Start with your company name. You can add more details later.",
+        "Add the details Credo needs to prepare payroll and records.",
+      firstCompanyTitle: "Set up your company",
+      firstCompanySubtitle: "Add the details Credo needs to prepare payroll and records.",
       companyNameLabel: "Company name",
       companyNameHint: "Shown in Credo.",
       companyNameRequired: "Company name is required.",
@@ -68,7 +68,7 @@ export const en = {
       successToast: "Company deleted",
       reasonStepTitle: "Delete company",
       reasonStepSubtitle:
-        "This removes the company from your dashboard. We'll keep an audit record.",
+        "Review the impact before removing this company from your workspace.",
       reasonLabel: "Reason",
       reasonSelectPlaceholder: "Select a reason",
       reasonOtherLabel: "Tell us why",
@@ -211,7 +211,7 @@ export const en = {
       ],
       payrollTypes: [
         { id: "all", label: "All payroll types" },
-        { id: "regular", label: "Regular" },
+        { id: "regular", label: "Standard" },
         { id: "bonus", label: "Bonus" },
         { id: "off-cycle", label: "Off-cycle" },
       ],
@@ -229,7 +229,7 @@ export const en = {
         completed: "Completed",
       },
       types: {
-        regular: "Regular",
+        regular: "Standard",
         bonus: "Bonus",
         offCycle: "Off-cycle",
       },
@@ -384,13 +384,13 @@ export const en = {
       },
       payrollType: {
         label: "Payroll type",
-        options: ["Regular", "Bonus", "Off-cycle"],
+        options: ["Standard", "Bonus", "Off-cycle"],
       },
       employees: {
         allEmployees: "All employees",
       },
       useCustomDates: "Use custom dates",
-      customDateHelper: "Use this only when the pay period does not match the regular payroll schedule.",
+      customDateHelper: "Use this only when the pay period does not match the standard payroll schedule.",
       startDate: "Start date",
       endDate: "End date",
       invalidDateRange: "End date must be after the start date.",
@@ -755,6 +755,8 @@ export const en = {
     profile: {
       companyNameRequired: "Company name is required. Add it and try again.",
       legalNameRequired: "Legal name is required. Add it and try again.",
+      duplicateError:
+        "A company with matching legal details already exists in this workspace. Review the company name, tax IDs, and payroll number and try again.",
       saveError: "We couldn’t save company details. Check required fields and try again.",
       updateError: "We couldn’t update company details. Check required fields and try again.",
       confirmError: "We couldn’t confirm the company yet. Review details and try again.",
